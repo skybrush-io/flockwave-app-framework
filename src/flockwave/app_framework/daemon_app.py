@@ -1,8 +1,8 @@
 from functools import partial
 from importlib import import_module
-from logging import getLogger
+from logging import getLogger, Logger
 from trio import CancelScope, MultiError, Nursery, open_nursery
-from typing import Optional
+from typing import Optional, Union
 
 from .configurator import AppConfigurator, Configuration
 
@@ -34,7 +34,9 @@ class DaemonApp:
             extension modules for the daemon
     """
 
-    def __init__(self, name: str, package_name: str):
+    def __init__(
+        self, name: str, package_name: str, *, log: Optional[Union[str, Logger]] = None
+    ):
         """Constructor.
 
         Parameters:
@@ -47,6 +49,8 @@ class DaemonApp:
                 be in a Python module named `config` within this package.
                 Extensions corresponding to the daemon app are looked up in the
                 `ext` subpackage of this package.
+            log: name of the logger to use by the app; defaults to the
+                application name. You may also pass a Logger instance here
         """
         if " " in name:
             raise ValueError("App name may not contain spaces")
@@ -59,6 +63,12 @@ class DaemonApp:
         self.debug = False
         self.connection_supervisor = None  # type: Optional[ConnectionSupervisor]
         self.extension_manager = None  # type: Optional[ExtensionManager]
+
+        logger = log or self._app_name
+        if hasattr(logger, "info"):
+            self.log = logger
+        else:
+            self.log = getLogger(logger)
 
         # Placeholder for a nursery that parents all tasks in the daemon.
         # This will be set to a real nursery when the server starts.
@@ -91,7 +101,6 @@ class DaemonApp:
 
         from flockwave.ext.manager import ExtensionManager
 
-        self.log = getLogger(self._app_name)
         self.extension_manager = ExtensionManager(self._package_name + ".ext")
         if ConnectionSupervisor:
             self.connection_supervisor = ConnectionSupervisor()
