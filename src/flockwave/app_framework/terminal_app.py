@@ -1,0 +1,167 @@
+from typing import List, Optional, Tuple, TYPE_CHECKING
+
+from .base import AsyncApp
+
+if TYPE_CHECKING:
+    from urwid import EventLoop, MainLoop, Widget
+    from urwid_uikit.menus import MenuOverlay
+
+
+__all__ = ("Palette", "TerminalApp")
+
+#: Typing specification for urwid color palettes
+Palette = List[Tuple[str, str, str]]
+
+
+class TerminalApp(AsyncApp):
+    """Base class for apps that are designed to provide a terminal-based used
+    interface.
+
+    Attributes:
+        debug: whether the app is in debug mode
+    """
+
+    def __init__(self, *args, **kwds):
+        self._menu_overlay = None  # type: Optional[MenuOverlay]
+        self._root_widget = None  # type: Optional[Widget]
+        self._ui_main_loop = None  # type: Optional[MainLoop]
+        self._ui_event_loop = None  # type: Optional[EventLoop]
+        super().__init__(*args, **kwds)
+
+    def _create_basic_components(self) -> None:
+        """Creates the most basic components of the application.
+
+        This function is called by the constructor once at construction time.
+        You should not need to call it later.
+
+        Typically, you should not override this function; override
+        `_create_components()` instead. If you do override this function, make
+        sure to call the superclass implementation.
+
+        The configuration of the app is not loaded yet when this function is
+        executed. Avoid querying the configuration of the app here because
+        the settings will not be up-to-date yet. Use `prepare()` for any
+        preparations that depend on the configuration.
+        """
+        self._ui_main_loop = self._create_ui_main_loop()
+        self.run_in_background(self._run_ui)
+
+    def _create_palette(self) -> Palette:
+        """Creates the main palette that the app uses.
+
+        The palette is a mapping from "semantic" color names to their actual
+        foreground-background color combinations.
+
+        The default implementation of this method returns a sensible palette
+        with commonly used semantic color names. Typically, you should override
+        this function, call the superclass implementation and then extend the
+        returned list with your own semantic color names.
+        """
+        from urwid_uikit.app import Application
+
+        return list(Application.palette)
+
+    def _create_ui_event_loop(self) -> "EventLoop":
+        """Creates a new instance of the UI event loop that the app uses.
+
+        Normally you should not need to override this function. You should not
+        call it manually either; `get_ui_event_loop()` will call it once when
+        the UI event loop is about to be constructed.
+        """
+        from urwid import TrioEventLoop
+
+        return TrioEventLoop()
+
+    def _create_ui_main_loop(self) -> "EventLoop":
+        """Creates a new instance of the UI main loop that the app uses.
+
+        Normally you should not need to override this function. You should not
+        call it manually either; `_create_basic_components()` will call it once
+        when the UI main loop is about to be constructed.
+        """
+        from urwid import MainLoop
+        from urwid_uikit.menus import MenuOverlay
+
+        self._root_widget = self.create_root_widget()
+        self._menu_overlay = MenuOverlay(self._root_widget)
+
+        return MainLoop(
+            self._menu_overlay,
+            self._create_palette(),
+            event_loop=self.get_ui_event_loop(),
+            unhandled_input=self.on_input,
+        )
+
+    async def _run_ui(self) -> None:
+        """Async task that keeps the main UI running."""
+        with self._ui_main_loop.start():
+            await self._ui_event_loop.run_async()
+
+    def create_root_widget(self) -> "Widget":
+        """Creates the top-level UI widget that the application will show.
+
+        Typically you need to override this method in your application.
+        """
+        from urwid import Filler, Text
+
+        return Filler(
+            Text("Override the create_top_level_widget() method first."), "top"
+        )
+
+    def get_ui_event_loop(self) -> "EventLoop":
+        """Returns the UI event loop that the app uses.
+
+        The UI event loop originates from the underlying `urwid` library and
+        it ties itself into the main async event loop of the app.
+        """
+        if self._ui_event_loop is None:
+            self._ui_event_loop = self._create_ui_event_loop()
+            if self._ui_event_loop is None:
+                raise RuntimeError(
+                    "_create_ui_event_loop() did not create an event loop"
+                )
+        return self._ui_event_loop
+
+    def invoke_menu(self) -> bool:
+        """Invokes the main menu of the application.
+
+        Returns:
+            whether the main menu was shown. If the application has no attribute
+            named `on_menu_invoked()`, returns ``False`` as there is no main
+            menu associated to the application.
+        """
+        func = getattr(self, "on_menu_invoked", None)
+        if func is not None:
+            items = func()
+            if items:
+                self._menu_overlay.open_menu(items, title="Main menu")
+            return True
+        else:
+            return False
+
+    def on_input(self, input) -> None:
+        """Callback method that is called by ``urwid`` for unhandled
+        keyboard input.
+
+        The default implementation treats ``q`` and ``Q`` as a command to quit
+        the main application so it terminates the main loop. ``Esc`` will open
+        the main menu of the application if it has one, otherwise it will also
+        quit the main application.
+        """
+        if input in ("q", "Q"):
+            self.quit()
+        elif input == "esc":
+            self.invoke_menu() or self.quit()
+
+    @property
+    def root_widget(self) -> Optional["Widget"]:
+        """Returns the top-level widget of the app."""
+        return self._root_widget
+
+    def quit(self) -> None:
+        """Instructs the UI main loop to terminate.
+
+        Override this method to add confirmation before quitting. The default
+        implementation simply calls `self.request_shutdown()`.
+        """
+        self.request_shutdown()
