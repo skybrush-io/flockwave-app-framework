@@ -96,6 +96,8 @@ class TerminalApp(AsyncApp):
         """Async task that keeps the main UI running."""
         with self._ui_main_loop.start():
             await self._ui_event_loop.run_async()
+        if self._nursery:
+            self._nursery.cancel_scope.cancel()
 
     def create_root_widget(self) -> "Widget":
         """Creates the top-level UI widget that the application will show.
@@ -162,6 +164,9 @@ class TerminalApp(AsyncApp):
         """Instructs the UI main loop to terminate.
 
         Override this method to add confirmation before quitting. The default
-        implementation simply calls `self.request_shutdown()`.
+        implementation simply raises an ExitMainLoop_ exception that triggers
+        the main UI loop to stop.
         """
-        self.request_shutdown()
+        from urwid import ExitMainLoop
+
+        raise ExitMainLoop
