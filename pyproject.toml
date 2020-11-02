@@ -10,7 +10,9 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.7"
 trio = "^0.17.0"
+flockwave-conn = {version = "^2.3.1", optional = true}
 flockwave-ext = {version = "^1.4.0", optional = true}
+urwid-uikit = {version = "^1.8.0", optional = true}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.4.3"
@@ -20,6 +22,7 @@ black = {version = "^20.8b1", allow-prereleases = true}
 
 [tool.poetry.extras]
 daemon = ["flockwave-conn", "flockwave-ext"]
+console = ["urwid-uikit"]
 
 [[tool.poetry.source]]
 name = "collmot"
