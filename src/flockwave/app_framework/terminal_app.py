@@ -43,7 +43,6 @@ class TerminalApp(AsyncApp):
         the settings will not be up-to-date yet. Use `prepare()` for any
         preparations that depend on the configuration.
         """
-        self._ui_main_loop = self._create_ui_main_loop()
         self.run_in_background(self._run_ui)
 
     def _create_palette(self) -> Palette:
@@ -85,19 +84,37 @@ class TerminalApp(AsyncApp):
         self._root_widget = self.create_root_widget()
         self._menu_overlay = MenuOverlay(self._root_widget)
 
-        return MainLoop(
-            self._menu_overlay,
-            self._create_palette(),
-            event_loop=self.get_ui_event_loop(),
-            unhandled_input=self.on_input,
-        )
+        kwds = {
+            "palette": self._create_palette(),
+            "event_loop": self.get_ui_event_loop(),
+            "unhandled_input": self.on_input,
+        }
+
+        self._update_ui_main_loop_kwargs(kwds)
+
+        return MainLoop(self._menu_overlay, **kwds)
 
     async def _run_ui(self) -> None:
         """Async task that keeps the main UI running."""
+        self._ui_main_loop = self._create_ui_main_loop()
         with self._ui_main_loop.start():
             await self._ui_event_loop.run_async()
         if self._nursery:
             self._nursery.cancel_scope.cancel()
+
+    def _update_ui_main_loop_kwargs(self, kwds) -> None:
+        """Hook function that allows the user to modify the keyword arguments
+        passed to `urwid.MainLoop()` when it is constructed.
+
+        This is a highly advanced function; typically you do not need to
+        override this unless you want to do extra fancy stuff like rendering
+        the app on a different TTY where it is invoked from.
+
+        Parameters:
+            kwds: the keyword arguments passed to `urwid.MainLoop()`; it must be
+                modified in-place
+        """
+        pass
 
     def create_root_widget(self) -> "Widget":
         """Creates the top-level UI widget that the application will show.
