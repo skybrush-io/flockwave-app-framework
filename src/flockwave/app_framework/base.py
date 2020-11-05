@@ -81,6 +81,17 @@ class AsyncApp:
         """
         pass
 
+    def _setup_app_configurator(self, configurator: AppConfigurator) -> None:
+        """Hook function that is called after the app constructs the
+        AppConfigurator_ instance responsible for parsing configuration files,
+        and that allows one to update some properties of the AppConfigurator_
+        to tweak its behaviour.
+
+        The default implementation does nothing; you can safely override this
+        function in subclasses.
+        """
+        pass
+
     def prepare(
         self, config: Optional[str] = None, debug: bool = False
     ) -> Optional[int]:
@@ -102,6 +113,7 @@ class AsyncApp:
             log=self.log,
             package_name=self._package_name,
         )
+        self._setup_app_configurator(configurator)
         if not configurator.configure(config):
             return 1
 

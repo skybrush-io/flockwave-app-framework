@@ -8,12 +8,35 @@ import os
 from importlib import import_module
 from json import load
 from logging import Logger
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 __alL__ = ("AppConfigurator", "Configuration")
 
 #: Type specification for configuration objects
 Configuration = Dict[str, Any]
+
+
+def _always_false(*args, **kwds) -> bool:
+    """Dummy function that returns `False` for any input."""
+    return False
+
+
+def _always_true(*args, **kwds) -> bool:
+    """Dummy function that returns `True` for any input."""
+    return True
+
+
+def _merge_dicts(source, into) -> None:
+    """Merges a source dictionary into a target dictionary recursively."""
+    for key, value in source.items():
+        if isinstance(value, dict):
+            existing_value = into.get(key)
+            if isinstance(existing_value, dict):
+                _merge_dicts(value, into=existing_value)
+            else:
+                into[key] = value
+        else:
+            into[key] = value
 
 
 class AppConfigurator:
@@ -46,6 +69,8 @@ class AppConfigurator:
         self._config = config if config is not None else {}
         self._default_filename = default_filename
         self._environment_variable = environment_variable
+        self._key_filter = _always_true
+        self._merge_keys = _always_false
         self._log = log
         self._package_name = package_name
 
@@ -60,6 +85,45 @@ class AppConfigurator:
             bool: whether the configuration sources were processed successfully
         """
         return self._load_configuration(filename)
+
+    @property
+    def key_filter(self) -> Callable[[str], bool]:
+        """Key filter function that decides whether a top-level key from a
+        configuration source should be considered (`True`) or ignored (`False`).
+        You can use this, e.g., to force that only uppercase keys get merged
+        into the configuration object from the individual sources.
+
+        When setting this property, you may also use `None` to indicate
+        "don't filter, just accept everything".
+        """
+        return self._key_filter
+
+    @key_filter.setter
+    def key_filter(self, value) -> None:
+        self._key_filter = value or _always_true
+
+    @property
+    def merge_keys(self) -> Callable[[str], bool]:
+        """Function that decides whether a new value for top-level key from a
+        configuration source should _overwrite_ the previous value already in
+        the configuration (`False`) or should be merged into the previous value
+        (`True`). The latter makes sense only if both the old and the new value
+        of the property is a dictionary. Merging is done recursively.
+
+        When setting this property, `None` and `False` means "never merge keys",
+        `True` means "always merge keys if possible", and a list of keys means
+        "these keys should be merged, everything else should be overwritten".
+        """
+        return self._merge_keys
+
+    @merge_keys.setter
+    def merge_keys(self, value) -> None:
+        if not value:
+            self._merge_keys = _always_false
+        elif callable(value):
+            self._merge_keys = value
+        else:
+            self._merge_keys = set(value).__contains__
 
     @property
     def result(self) -> Configuration:
@@ -176,8 +240,15 @@ class AppConfigurator:
             config: the configuration dict to load.
         """
         for key, value in config.items():
-            if key.isupper():
-                self._config[key] = value
+            if self._key_filter(key):
+                if isinstance(value, dict) and self._merge_keys(key):
+                    existing_value = self._config.get(key)
+                    if isinstance(existing_value, dict):
+                        _merge_dicts(value, into=existing_value)
+                    else:
+                        self._config[key] = value
+                else:
+                    self._config[key] = value
 
     def _load_configuration_from_object(self, config: Any) -> None:
         """Loads configuration settings from the given Python object.
@@ -188,5 +259,13 @@ class AppConfigurator:
             config: the configuration object to load.
         """
         for key in dir(config):
-            if key.isupper():
-                self._config[key] = getattr(config, key)
+            if self._key_filter(key):
+                value = getattr(config, key)
+                if isinstance(value, dict) and self._merge_keys(key):
+                    existing_value = self._config.get(key)
+                    if isinstance(existing_value, dict):
+                        _merge_dicts(value, into=existing_value)
+                    else:
+                        self._config[key] = value
+                else:
+                    self._config[key] = value
