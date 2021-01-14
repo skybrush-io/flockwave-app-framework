@@ -109,7 +109,11 @@ class AsyncApp:
         configurator = AppConfigurator(
             self.config,
             environment_variable=(self._app_name.upper() + "_SETTINGS"),
-            default_filename=(self._app_name + ".cfg"),
+            default_filename=(
+                self._app_name + ".cfg",
+                self._app_name + ".jsonc",
+                self._app_name + ".json"
+            ),
             log=self.log,
             package_name=self._package_name,
         )

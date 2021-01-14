@@ -9,7 +9,7 @@ from commentjson import load as load_jsonc
 from importlib import import_module
 from json import load as load_json
 from logging import Logger
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Iterable, Optional, Union
 
 __alL__ = ("AppConfigurator", "Configuration")
 
@@ -49,7 +49,7 @@ class AppConfigurator:
         self,
         config: Optional[Configuration] = None,
         *,
-        default_filename: Optional[str] = None,
+        default_filename: Optional[Union[str, Iterable[str]]] = None,
         environment_variable: Optional[str] = None,
         log: Optional[Logger] = None,
         package_name: str = None
@@ -60,7 +60,9 @@ class AppConfigurator:
             config: the configuration object that the configurator will
                 populate. May contain default values.
             default_filename: name of the default configuration file that the
-                configurator will look for in the current working directory
+                configurator will look for in the current working directory.
+                Multiple filenames may also be given in a list or tuple; the
+                first configuration file found will be used as the default.
             environment_variable: name of the environment variable in which
                 the configurator will look for the name of an additional
                 configuration file to load
@@ -68,7 +70,12 @@ class AppConfigurator:
                 of the app from
         """
         self._config = config if config is not None else {}
-        self._default_filename = default_filename
+        if default_filename is None:
+            self._default_filenames = ()
+        elif isinstance(default_filename, str):
+            self._default_filenames = (default_filename, )
+        else:
+            self._default_filenames = tuple(default_filename)
         self._environment_variable = environment_variable
         self._key_filter = _always_true
         self._merge_keys = _always_false
@@ -172,8 +179,14 @@ class AppConfigurator:
 
         if config:
             config_files.append((config, True))
-        elif self._default_filename:
-            config_files.append((self._default_filename, False))
+
+        for default_filename in self._default_filenames:
+            try:
+                if os.path.isfile(default_filename):
+                    config_files.append((default_filename, False))
+                    break
+            except Exception:
+                pass
 
         if self._environment_variable:
             config_files.append((os.environ.get(self._environment_variable), True))
