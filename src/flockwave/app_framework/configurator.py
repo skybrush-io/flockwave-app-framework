@@ -5,8 +5,9 @@ sources.
 import errno
 import os
 
+from commentjson import load as load_jsonc
 from importlib import import_module
-from json import load
+from json import load_json
 from logging import Logger
 from typing import Any, Callable, Dict, Optional
 
@@ -207,7 +208,9 @@ class AppConfigurator:
         try:
             with open(filename, mode="rb") as config_file:
                 if filename.endswith(".json"):
-                    config = load(config_file)
+                    config = load_json(config_file)
+                elif filename.endswith(".cjson") or filename.endswith(".jsonc"):
+                    config = load_jsonc(config_file)
                 else:
                     exec(compile(config_file.read(), filename, "exec"), config)
         except IOError as e:
