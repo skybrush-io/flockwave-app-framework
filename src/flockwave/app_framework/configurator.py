@@ -7,7 +7,7 @@ import os
 
 from commentjson import load as load_jsonc
 from importlib import import_module
-from json import load_json
+from json import load as load_json
 from logging import Logger
 from typing import Any, Callable, Dict, Optional
 
