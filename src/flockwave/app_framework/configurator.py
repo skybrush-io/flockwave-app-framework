@@ -161,8 +161,9 @@ class AppConfigurator:
           package, if there is one.
 
         - The configuration file referred to by the `config` argument,
-          if present. If it is `None` and a default configuration filename
-          was specified at construction time, it will be used instead.
+          if present. If it is `None` and one or more default configuration
+          filenames were specified at construction time, the first default
+          configuration file that exists will be used instead.
 
         - The configuration file referred to by the environment variable
           provided at construction time, if it is specified.
@@ -179,14 +180,14 @@ class AppConfigurator:
 
         if config:
             config_files.append((config, True))
-
-        for default_filename in self._default_filenames:
-            try:
-                if os.path.isfile(default_filename):
-                    config_files.append((default_filename, False))
-                    break
-            except Exception:
-                pass
+        else:
+            for default_filename in self._default_filenames:
+                try:
+                    if os.path.isfile(default_filename):
+                        config_files.append((default_filename, False))
+                        break
+                except Exception:
+                    pass
 
         if self._environment_variable:
             config_files.append((os.environ.get(self._environment_variable), True))
@@ -250,8 +251,6 @@ class AppConfigurator:
     def _load_configuration_from_dict(self, config: Dict[str, Any]) -> None:
         """Loads configuration settings from the given Python dictionary.
 
-        Only uppercase keys will be processed.
-
         Parameters:
             config: the configuration dict to load.
         """
@@ -268,8 +267,6 @@ class AppConfigurator:
 
     def _load_configuration_from_object(self, config: Any) -> None:
         """Loads configuration settings from the given Python object.
-
-        Only uppercase keys will be processed.
 
         Parameters:
             config: the configuration object to load.
