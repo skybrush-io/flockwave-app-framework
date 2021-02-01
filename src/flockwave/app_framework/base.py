@@ -7,6 +7,7 @@ from trio import CancelScope, MultiError, Nursery, open_nursery
 from typing import Optional, Union
 
 from .configurator import AppConfigurator, Configuration
+from .errors import ApplicationExit
 
 __all__ = ("AsyncApp",)
 
@@ -112,7 +113,7 @@ class AsyncApp:
             default_filename=(
                 self._app_name + ".cfg",
                 self._app_name + ".jsonc",
-                self._app_name + ".json"
+                self._app_name + ".json",
             ),
             log=self.log,
             package_name=self._package_name,
@@ -190,6 +191,9 @@ class AsyncApp:
 
                     for task in tasks:
                         nursery.start_soon(task)
+
+        except ApplicationExit as ex:
+            self.log.error(str(ex) or "Received request to stop application.")
 
         finally:
             self._nursery = None

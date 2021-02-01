@@ -4,6 +4,7 @@ from trio import Nursery
 from typing import Optional, Union, TYPE_CHECKING
 
 from .base import AsyncApp
+from .errors import ApplicationExit
 
 if TYPE_CHECKING:
     from flockwave.connection import (
@@ -66,13 +67,20 @@ class DaemonApp(AsyncApp):
             self.connection_supervisor = ConnectionSupervisor()
 
     async def _on_nursery_created(self, nursery: Nursery) -> None:
-        await nursery.start(
-            partial(
-                self.extension_manager.run,
-                configuration=self.config.get("EXTENSIONS", {}),
-                app=self,
+        from flockwave.ext.errors import ApplicationExit as ExitRequestedFromExtension
+
+        try:
+            await nursery.start(
+                partial(
+                    self.extension_manager.run,
+                    configuration=self.config.get("EXTENSIONS", {}),
+                    app=self,
+                )
             )
-        )
+        except ExitRequestedFromExtension as ex:
+            raise ApplicationExit(
+                str(ex) or "Application exit requested from extension"
+            )
 
         if self.connection_supervisor:
             nursery.start_soon(self.connection_supervisor.run)
