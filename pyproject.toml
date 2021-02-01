@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "flockwave-app-framework"
-version = "1.1.1"
+version = "1.2.0"
 description = "Generic app framework for CLI based apps in the Skybrush suite"
 authors = ["Tamas Nepusz <tamas@collmot.com>"]
 packages = [
@@ -11,7 +11,7 @@ packages = [
 python = "^3.7"
 trio = "^0.17.0"
 flockwave-conn = {version = "^2.3.1", optional = true}
-flockwave-ext = {version = "^1.4.0", optional = true}
+flockwave-ext = {version = "^1.5.0", optional = true}
 urwid-uikit = {version = "^1.8.1", optional = true}
 commentjson = "^0.9.0"
 
