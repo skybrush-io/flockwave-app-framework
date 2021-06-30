@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import partial
 from logging import Logger
 from trio import Nursery
@@ -24,13 +26,16 @@ class DaemonApp(AsyncApp):
 
     Attributes:
         config: dictionary holding the configuration options of the application
+        debug: whether the app is in debug mode
         connection_supervisor: object that manages the set of connections that
             the daemon needs to maintain to other processes, and that tries to
             reopen these connections if they get closed due to IO errors
-        debug: whether the app is in debug mode
         extension_manager: object that manages the loading and unloading of
             extension modules for the daemon
     """
+
+    connection_supervisor: Optional["ConnectionSupervisor"]
+    extension_manager: "ExtensionManager"
 
     def __init__(
         self, name: str, package_name: str, *, log: Optional[Union[str, Logger]] = None
@@ -50,8 +55,8 @@ class DaemonApp(AsyncApp):
             log: name of the logger to use by the app; defaults to the
                 application name. You may also pass a Logger instance here
         """
-        self.connection_supervisor = None  # type: Optional[ConnectionSupervisor]
-        self.extension_manager = None  # type: Optional[ExtensionManager]
+        self.connection_supervisor = None
+        self.extension_manager = None  # type: ignore
         super().__init__(name, package_name, log=log)
 
     def _create_basic_components(self) -> None:
@@ -111,10 +116,9 @@ class DaemonApp(AsyncApp):
                 be imported
 
         Returns:
-            ExtensionAPIProxy: a proxy object to the API of the extension
-                that forwards attribute retrievals to the API, except for
-                the property named ``loaded``, which returns whether the
-                extension is loaded or not.
+            a proxy object to the API of the extension that forwards attribute
+            retrievals to the API, except for the property named ``loaded``,
+            which returns whether the extension is loaded or not.
 
         Raises:
             KeyError: if the extension with the given name does not exist
@@ -127,7 +131,7 @@ class DaemonApp(AsyncApp):
         *,
         task: Optional["ConnectionTask"] = None,
         policy: Optional["SupervisionPolicy"] = None,
-    ):
+    ) -> None:
         """Shorthand to `self.connection_supervisor.supervise()`. See the
         details there.
         """
@@ -138,7 +142,7 @@ class DaemonApp(AsyncApp):
 
         await self.connection_supervisor.supervise(connection, task=task, policy=policy)
 
-    async def teardown(self):
+    async def teardown(self) -> None:
         """Called when the application is about to shut down. Calls all
         registered shutdown hooks and performs additional cleanup if needed.
         """

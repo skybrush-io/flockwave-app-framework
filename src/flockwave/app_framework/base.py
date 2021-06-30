@@ -4,7 +4,7 @@ from functools import partial
 from importlib import import_module
 from logging import getLogger, Logger
 from trio import CancelScope, MultiError, Nursery, open_nursery
-from typing import Optional, Union
+from typing import Awaitable, Callable, List, Optional, Union
 
 from .configurator import AppConfigurator, Configuration
 from .errors import ApplicationExit
@@ -18,10 +18,19 @@ class AsyncApp:
 
     Basically almost all of our apps except the most simple ones are based on
     this base class.
-
-    Attributes:
-        debug: whether the app is in debug mode
     """
+
+    #: Dictionary holding the configuration options of the application
+    config: Configuration
+
+    #: Whether the app is in debug mode
+    debug: bool
+
+    #: The logger of the application
+    log: Logger
+
+    _nursery: Optional[Nursery]
+    _pending_tasks: List[Callable[[], Awaitable[None]]]
 
     def __init__(
         self, name: str, package_name: str, *, log: Optional[Union[str, Logger]] = None
@@ -48,19 +57,21 @@ class AsyncApp:
         self._package_name = package_name
         self._prepared = False
 
-        self.config = {}  # type: Configuration
+        self.config = {}
         self.debug = False
 
         logger = log or self._app_name
         if hasattr(logger, "info"):
-            self.log = logger
-        else:
+            self.log = logger  # type: ignore
+        elif isinstance(logger, str):
             self.log = getLogger(logger)
+        else:
+            raise TypeError("Invalid logger type, expected str or Logger")
 
         # Placeholder for a nursery that parents all tasks in the app.
         # This will be set to a real nursery when the app starts.
-        self._nursery = None  # type: Optional[Nursery]
-        self._pending_tasks = []  # type: list
+        self._nursery = None
+        self._pending_tasks = []
 
         self._create_basic_components()
         self._create_components()
@@ -199,7 +210,7 @@ class AsyncApp:
             self._nursery = None
             await self.teardown()
 
-    async def teardown(self):
+    async def teardown(self) -> None:
         """Called when the application is about to shut down.
 
         Make sure to call the superclass implementation if you override this

@@ -138,7 +138,7 @@ reference = "collmot"
 
 [[package]]
 name = "flockwave-conn"
-version = "2.11.2"
+version = "2.11.3"
 description = "Connection objects for various data sources"
 category = "main"
 optional = true
@@ -607,7 +607,7 @@ daemon = ["flockwave-conn", "flockwave-ext"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "2d61ee437a006e2cc7fd6b96935e26762ac0d74fffe1026d6ab0f327c2ebfbe5"
+content-hash = "e6dc071902758289a822330e0019cc23e30169b8574d2d69ee7d9e2ff2a278de"
 
 [metadata.files]
 async-generator = [
@@ -742,8 +742,8 @@ coverage = [
     {file = "coverage-5.5.tar.gz", hash = "sha256:ebe78fe9a0e874362175b02371bdfbee64d8edc42a044253ddf4ee7d3c15212c"},
 ]
 flockwave-conn = [
-    {file = "flockwave-conn-2.11.2.tar.gz", hash = "md5:c482029ffacbf8987af91c8cc826bce7"},
-    {file = "flockwave_conn-2.11.2-py3-none-any.whl", hash = "md5:ded70e13f65a6822732c93f78c7ee634"},
+    {file = "flockwave-conn-2.11.3.tar.gz", hash = "md5:a2ccc42d301a9e8e980ccb37ef9d4a90"},
+    {file = "flockwave_conn-2.11.3-py3-none-any.whl", hash = "md5:2346dfabb2b05b0caa6e366ce051cae0"},
 ]
 flockwave-ext = [
     {file = "flockwave-ext-1.6.0.tar.gz", hash = "md5:700bc6be35d0929311fd369e6955d5d0"},

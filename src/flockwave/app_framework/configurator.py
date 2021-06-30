@@ -9,7 +9,7 @@ from commentjson import load as load_jsonc
 from importlib import import_module
 from json import load as load_json
 from logging import Logger
-from typing import Any, Callable, Dict, Iterable, Optional, Union
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple, Union
 
 __alL__ = ("AppConfigurator", "Configuration")
 
@@ -45,6 +45,14 @@ class AppConfigurator:
     various sources.
     """
 
+    _config: Configuration
+    _default_filenames: Tuple[str, ...]
+    _environment_variable: Optional[str]
+    _key_filter: Callable[[str], bool]
+    _merge_keys: Callable[[str], bool]
+    _log: Optional[Logger]
+    _package_name: Optional[str]
+
     def __init__(
         self,
         config: Optional[Configuration] = None,
@@ -52,7 +60,7 @@ class AppConfigurator:
         default_filename: Optional[Union[str, Iterable[str]]] = None,
         environment_variable: Optional[str] = None,
         log: Optional[Logger] = None,
-        package_name: str = None
+        package_name: Optional[str] = None
     ):
         """Constructor.
 
@@ -73,7 +81,7 @@ class AppConfigurator:
         if default_filename is None:
             self._default_filenames = ()
         elif isinstance(default_filename, str):
-            self._default_filenames = (default_filename, )
+            self._default_filenames = (default_filename,)
         else:
             self._default_filenames = tuple(default_filename)
         self._environment_variable = environment_variable
@@ -82,7 +90,7 @@ class AppConfigurator:
         self._log = log
         self._package_name = package_name
 
-    def configure(self, filename: Optional[str] = None) -> Configuration:
+    def configure(self, filename: Optional[str] = None) -> bool:
         """Configures the application.
 
         Parameters:
@@ -90,7 +98,7 @@ class AppConfigurator:
                 command line
 
         Returns:
-            bool: whether the configuration sources were processed successfully
+            whether the configuration sources were processed successfully
         """
         return self._load_configuration(filename)
 
@@ -107,7 +115,7 @@ class AppConfigurator:
         return self._key_filter
 
     @key_filter.setter
-    def key_filter(self, value) -> None:
+    def key_filter(self, value: Callable[[str], bool]) -> None:
         self._key_filter = value or _always_true
 
     @property
@@ -125,7 +133,7 @@ class AppConfigurator:
         return self._merge_keys
 
     @merge_keys.setter
-    def merge_keys(self, value) -> None:
+    def merge_keys(self, value: Callable[[str], bool]) -> None:
         if not value:
             self._merge_keys = _always_false
         elif callable(value):
@@ -172,7 +180,7 @@ class AppConfigurator:
             config: name of the configuration file to load
 
         Returns:
-            bool: whether all configuration files were processed successfully
+            whether all configuration files were processed successfully
         """
         self._load_base_configuration()
 

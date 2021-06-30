@@ -3,7 +3,8 @@ from typing import List, Optional, Tuple, TYPE_CHECKING
 from .base import AsyncApp
 
 if TYPE_CHECKING:
-    from urwid import EventLoop, MainLoop, Widget
+    from urwid import MainLoop, Widget
+    from urwid.main_loop import EventLoop
     from urwid_uikit.menus import MenuOverlay
 
 
@@ -21,11 +22,16 @@ class TerminalApp(AsyncApp):
         debug: whether the app is in debug mode
     """
 
+    _menu_overlay: Optional["MenuOverlay"]
+    _root_widget: Optional["Widget"]
+    _ui_event_loop: Optional["EventLoop"]
+    _ui_main_loop: Optional["MainLoop"]
+
     def __init__(self, *args, **kwds):
-        self._menu_overlay = None  # type: Optional[MenuOverlay]
-        self._root_widget = None  # type: Optional[Widget]
-        self._ui_main_loop = None  # type: Optional[MainLoop]
-        self._ui_event_loop = None  # type: Optional[EventLoop]
+        self._menu_overlay = None
+        self._root_widget = None
+        self._ui_main_loop = None
+        self._ui_event_loop = None
         super().__init__(*args, **kwds)
 
     def _create_basic_components(self) -> None:
@@ -71,7 +77,7 @@ class TerminalApp(AsyncApp):
 
         return TrioEventLoop()
 
-    def _create_ui_main_loop(self) -> "EventLoop":
+    def _create_ui_main_loop(self) -> "MainLoop":
         """Creates a new instance of the UI main loop that the app uses.
 
         Normally you should not need to override this function. You should not
@@ -98,7 +104,7 @@ class TerminalApp(AsyncApp):
         """Async task that keeps the main UI running."""
         self._ui_main_loop = self._create_ui_main_loop()
         with self._ui_main_loop.start():
-            await self._ui_event_loop.run_async()
+            await self._ui_event_loop.run_async()  # type: ignore
         if self._nursery:
             self._nursery.cancel_scope.cancel()
 
@@ -149,6 +155,8 @@ class TerminalApp(AsyncApp):
             named `on_menu_invoked()`, returns ``False`` as there is no main
             menu associated to the application.
         """
+        assert self._menu_overlay
+
         func = getattr(self, "on_menu_invoked", None)
         if func is not None:
             items = func()
