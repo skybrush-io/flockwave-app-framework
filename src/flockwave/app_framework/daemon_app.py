@@ -7,7 +7,7 @@ from .base import AsyncApp
 from .errors import ApplicationExit
 
 if TYPE_CHECKING:
-    from flockwave.connection import (
+    from flockwave.connections import (
         ConnectionSupervisor,
         ConnectionTask,
         SupervisionPolicy,
@@ -82,7 +82,10 @@ class DaemonApp(AsyncApp):
                 str(ex) or "Application exit requested from extension"
             )
         except Exception as ex:
-            raise ApplicationExit(str(ex) or "Application exiting due to an unexpected error from the extension manager")
+            raise ApplicationExit(
+                str(ex)
+                or "Application exiting due to an unexpected error from the extension manager"
+            )
 
         if self.connection_supervisor:
             nursery.start_soon(self.connection_supervisor.run)
