@@ -10,7 +10,7 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.7"
 trio = ">=0.17.0"
-flockwave-conn = {version = "^2.11.3", optional = true}
+flockwave-conn = {version = ">=2.11.3,<4.0.0", optional = true}
 flockwave-ext = {version = "^1.5.0", optional = true}
 urwid-uikit = {version = "^1.8.1", optional = true}
 commentjson = ">=0.9.0"
