@@ -1,11 +1,11 @@
-from typing import List, Optional, Tuple, TYPE_CHECKING
+from typing import List, Optional, Sequence, Tuple, TYPE_CHECKING
 
 from .base import AsyncApp
 
 if TYPE_CHECKING:
     from urwid import MainLoop, Widget
     from urwid.main_loop import EventLoop
-    from urwid_uikit.menus import MenuOverlay
+    from urwid_uikit.menus import MenuOverlay, MenuItemSpecification
 
 
 __all__ = ("Palette", "TerminalApp")
@@ -157,11 +157,9 @@ class TerminalApp(AsyncApp):
         """
         assert self._menu_overlay
 
-        func = getattr(self, "on_menu_invoked", None)
-        if func is not None:
-            items = func()
-            if items:
-                self._menu_overlay.open_menu(items, title="Main menu")
+        items = self.on_menu_invoked()
+        if items is not None:
+            self._menu_overlay.open_menu(items, title="Main menu")
             return True
         else:
             return False
@@ -179,6 +177,16 @@ class TerminalApp(AsyncApp):
             self.quit()
         elif input == "esc":
             self.invoke_menu() or self.quit()
+
+    def on_menu_invoked(self) -> Optional[Sequence["MenuItemSpecification"]]:
+        """Method that must be overridden if the terminal app wishes to provide
+        a menu that is triggered with the `invoke_menu()` function.
+
+        Returns:
+            a sequence of menu item specifications (as accepted by the `open_menu()`
+            function of MenuOverlay_), or ``None`` if no menu needs to be provided.
+        """
+        pass
 
     @property
     def root_widget(self) -> Optional["Widget"]:
