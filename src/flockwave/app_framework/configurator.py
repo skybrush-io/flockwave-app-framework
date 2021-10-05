@@ -133,7 +133,7 @@ class AppConfigurator:
         return self._merge_keys
 
     @merge_keys.setter
-    def merge_keys(self, value: Callable[[str], bool]) -> None:
+    def merge_keys(self, value: Union[Callable[[str], bool], Iterable[str]]) -> None:
         if not value:
             self._merge_keys = _always_false
         elif callable(value):
