@@ -29,8 +29,12 @@ class AsyncApp:
     #: The logger of the application
     log: Logger
 
+    _app_name: str
+    _configurator: Optional[AppConfigurator]
     _nursery: Optional[Nursery]
+    _package_name: str
     _pending_tasks: List[Callable[[], Awaitable[None]]]
+    _prepared: bool
 
     def __init__(
         self, name: str, package_name: str, *, log: Optional[Union[str, Logger]] = None
@@ -54,6 +58,7 @@ class AsyncApp:
             raise ValueError("App name may not contain spaces")
 
         self._app_name = name
+        self._configurator = None
         self._package_name = package_name
         self._prepared = False
 
@@ -130,6 +135,7 @@ class AsyncApp:
             package_name=self._package_name,
         )
         self._setup_app_configurator(configurator)
+        self._configurator = configurator
         if not configurator.configure(config):
             return 1
 
@@ -266,6 +272,19 @@ class AsyncApp:
             self.log.exception(
                 f"Unexpected exception caught from background task {func.__name__}"
             )
+
+    @property
+    def configurator(self) -> AppConfigurator:
+        """The configurator object of the application that was responsible for
+        loading the configuration from various sources. Must be called only after
+        the app was prepared with `prepare()`.
+
+        Raises:
+            RuntimeError: when called before the app was prepared
+        """
+        if self._configurator is None:
+            raise RuntimeError("Application was not prepared yet")
+        return self._configurator
 
     @property
     def version(self) -> str:

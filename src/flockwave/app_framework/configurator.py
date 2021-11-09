@@ -6,10 +6,12 @@ import errno
 import os
 
 from commentjson import load as load_jsonc
+from dataclasses import dataclass
+from enum import Enum
 from importlib import import_module
 from json import load as load_json
 from logging import Logger
-from typing import Any, Callable, Dict, Iterable, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 __alL__ = ("AppConfigurator", "Configuration")
 
@@ -40,6 +42,24 @@ def _merge_dicts(source, into) -> None:
             into[key] = value
 
 
+class ConfigurationFormat(Enum):
+    """Enum representing the configuration file formats that we support."""
+
+    JSON = "json"
+    JSONC = "jsonc"
+    PYTHON = "python"
+
+
+@dataclass(frozen=True)
+class LoadedConfigurationFile:
+    """Simple data class that encapsulates the name of a loaded configuration
+    file and the format it was stored in.
+    """
+
+    name: str
+    format: ConfigurationFormat
+
+
 class AppConfigurator:
     """Helper object that manages loading the configuration of the app from
     various sources.
@@ -49,6 +69,7 @@ class AppConfigurator:
     _default_filenames: Tuple[str, ...]
     _environment_variable: Optional[str]
     _key_filter: Callable[[str], bool]
+    _loaded_files: List[LoadedConfigurationFile]
     _merge_keys: Callable[[str], bool]
     _log: Optional[Logger]
     _package_name: Optional[str]
@@ -87,6 +108,7 @@ class AppConfigurator:
         self._environment_variable = environment_variable
         self._key_filter = _always_true
         self._merge_keys = _always_false
+        self._loaded_files = []
         self._log = log
         self._package_name = package_name
 
@@ -117,6 +139,11 @@ class AppConfigurator:
     @key_filter.setter
     def key_filter(self, value: Callable[[str], bool]) -> None:
         self._key_filter = value or _always_true
+
+    @property
+    def loaded_files(self) -> List[LoadedConfigurationFile]:
+        """Returns the list of loaded configuration files."""
+        return self._loaded_files
 
     @property
     def merge_keys(self) -> Callable[[str], bool]:
@@ -227,14 +254,18 @@ class AppConfigurator:
         config = {}
 
         exists = True
+        cfg_format: Optional[ConfigurationFormat] = None
         try:
             with open(filename, mode="rb") as config_file:
                 if filename.endswith(".json"):
                     config = load_json(config_file)
+                    cfg_format = ConfigurationFormat.JSON
                 elif filename.endswith(".cjson") or filename.endswith(".jsonc"):
                     config = load_jsonc(config_file)
+                    cfg_format = ConfigurationFormat.JSONC
                 else:
                     exec(compile(config_file.read(), filename, "exec"), config)
+                    cfg_format = ConfigurationFormat.PYTHON
         except IOError as e:
             if e.errno in (errno.ENOENT, errno.EISDIR, errno.ENOTDIR):
                 exists = False
@@ -248,6 +279,8 @@ class AppConfigurator:
                 self._log.warn("Cannot load configuration from {0!r}".format(original))
             return False
         elif exists:
+            if cfg_format is not None:
+                self._record_loaded_configuration_file(filename, cfg_format)
             if self._log:
                 self._log.info(
                     "Loaded configuration from {0!r}".format(original),
@@ -290,3 +323,8 @@ class AppConfigurator:
                         self._config[key] = value
                 else:
                     self._config[key] = value
+
+    def _record_loaded_configuration_file(
+        self, name: str, cfg_format: ConfigurationFormat
+    ) -> None:
+        self._loaded_files.append(LoadedConfigurationFile(name=name, format=cfg_format))
