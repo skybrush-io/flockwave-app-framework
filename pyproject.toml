@@ -17,8 +17,8 @@ commentjson = ">=0.9.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
-coverage = {extras = ["toml"], version = "^5.2"}
-pytest-cov = "^2.10.0"
+coverage = {extras = ["toml"], version = "^6.0"}
+pytest-cov = "^3.0.0"
 
 [tool.poetry.extras]
 daemon = ["flockwave-conn", "flockwave-ext"]
