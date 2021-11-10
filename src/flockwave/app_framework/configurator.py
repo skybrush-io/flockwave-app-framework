@@ -6,11 +6,13 @@ import errno
 import os
 
 from commentjson import load as load_jsonc
+from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
 from importlib import import_module
 from json import load as load_json
 from logging import Logger
+from types import ModuleType
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 __alL__ = ("AppConfigurator", "Configuration")
@@ -57,7 +59,16 @@ class LoadedConfigurationFile:
     """
 
     name: str
+    """Name of the file that was loaded."""
+
     format: ConfigurationFormat
+    """Format of the file that was loaded."""
+
+    pre_snapshot: Configuration
+    """A snapshot of the configuration that was in effect _before_ the file
+    was loaded. This can be used to derive the changes that loading the
+    file has made to the configuration using `jsondiff`.
+    """
 
 
 class AppConfigurator:
@@ -186,7 +197,7 @@ class AppConfigurator:
                 config = None
 
         if config:
-            self._load_configuration_from_object(config)
+            self._load_configuration_from_module(config)
 
     def _load_configuration(self, config: Optional[str] = None) -> bool:
         """Loads the configuration of the application from the following
@@ -265,6 +276,7 @@ class AppConfigurator:
                     cfg_format = ConfigurationFormat.JSONC
                 else:
                     exec(compile(config_file.read(), filename, "exec"), config)
+                    self._remove_python_builtins_from_config(config)
                     cfg_format = ConfigurationFormat.PYTHON
         except IOError as e:
             if e.errno in (errno.ENOENT, errno.EISDIR, errno.ENOTDIR):
@@ -272,6 +284,7 @@ class AppConfigurator:
             else:
                 raise
 
+        snapshot = deepcopy(self._config)
         self._load_configuration_from_dict(config)
 
         if not exists and mandatory:
@@ -280,7 +293,9 @@ class AppConfigurator:
             return False
         elif exists:
             if cfg_format is not None:
-                self._record_loaded_configuration_file(filename, cfg_format)
+                self._record_loaded_configuration_file(
+                    filename, cfg_format, pre_snapshot=snapshot
+                )
             if self._log:
                 self._log.info(
                     "Loaded configuration from {0!r}".format(original),
@@ -306,6 +321,16 @@ class AppConfigurator:
                 else:
                     self._config[key] = value
 
+    def _load_configuration_from_module(self, config: ModuleType) -> None:
+        """Loads configuration settings from the given Python module.
+
+        Parameters:
+            config: the configuration object to load.
+        """
+        contents = {k: getattr(config, k) for k in dir(config)}
+        self._remove_python_builtins_from_config(contents)
+        return self._load_configuration_from_dict(contents)
+
     def _load_configuration_from_object(self, config: Any) -> None:
         """Loads configuration settings from the given Python object.
 
@@ -325,6 +350,20 @@ class AppConfigurator:
                     self._config[key] = value
 
     def _record_loaded_configuration_file(
-        self, name: str, cfg_format: ConfigurationFormat
+        self, name: str, cfg_format: ConfigurationFormat, *, pre_snapshot: Configuration
     ) -> None:
-        self._loaded_files.append(LoadedConfigurationFile(name=name, format=cfg_format))
+        self._loaded_files.append(
+            LoadedConfigurationFile(
+                name=name, format=cfg_format, pre_snapshot=pre_snapshot
+            )
+        )
+
+    @staticmethod
+    def _remove_python_builtins_from_config(config: Configuration) -> None:
+        """Modifies the given configuration dictionary in-place and removes all
+        top-level keys that look like Python builtins.
+        """
+        to_remove = []
+        to_remove = [k for k in config.keys() if k.startswith("__")]
+        for k in to_remove:
+            del config[k]
