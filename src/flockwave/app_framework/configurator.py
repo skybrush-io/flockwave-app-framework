@@ -203,6 +203,15 @@ class AppConfigurator:
         """Returns the result of the configuration process."""
         return self._config
 
+    @property
+    def safe(self) -> bool:
+        """Returns whether the configurator object is in safe mode."""
+        return self._safe
+
+    @safe.setter
+    def safe(self, value: bool) -> None:
+        self._safe = bool(value)
+
     def _load_base_configuration(self) -> None:
         """Loads the default configuration of the application from the
         `flockctrl.server.config` module.
