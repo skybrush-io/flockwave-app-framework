@@ -317,9 +317,11 @@ class AppConfigurator:
 
         if exists and cfg_format is None:
             if self._log:
-                self._log.warn(
-                    f"Configuration file {original!r} is in an unknown format"
-                )
+                message = f"Configuration file {original!r} is in an unknown format"
+                if mandatory:
+                    self._log.error(message)
+                else:
+                    self._log.warn(message)
             return False
 
         snapshot = deepcopy(self._config)
@@ -327,7 +329,7 @@ class AppConfigurator:
 
         if not exists and mandatory:
             if self._log:
-                self._log.warn(f"Cannot load configuration from {original!r}")
+                self._log.error(f"Cannot load configuration from {original!r}")
             return False
         elif exists:
             if cfg_format is not None:
