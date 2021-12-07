@@ -45,13 +45,15 @@ def _merge_dicts(source, into) -> None:
             into[key] = value
 
 
-def load_json5_with_hask_mark_styled_comments(input: IO[bytes]) -> Any:
+def load_json5_with_hask_mark_styled_comments(
+    input: IO[bytes], *, encoding: str = "utf-8"
+) -> Any:
     """Helper function to load JSON5 files while dealing with the hashmark-style
     comments that were commonly found in earlier versions of our configuration
     files.
     """
-    lines = [sub(r"^\s*#.*", "", line) for line in input]  # type: ignore
-    return load_json5_from_string("".join(lines))
+    lines = [sub(rb"^\s*#.*", b"", line) for line in input]  # type: ignore
+    return load_json5_from_string(b"".join(lines).decode(encoding))
 
 
 class ConfigurationFormat(Enum):
