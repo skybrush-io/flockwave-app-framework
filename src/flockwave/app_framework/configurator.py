@@ -95,6 +95,7 @@ class AppConfigurator:
     _merge_keys: Callable[[str], bool]
     _log: Optional[Logger]
     _package_name: Optional[str]
+    _safe: bool
 
     def __init__(
         self,
@@ -103,7 +104,8 @@ class AppConfigurator:
         default_filename: Optional[Union[str, Iterable[str]]] = None,
         environment_variable: Optional[str] = None,
         log: Optional[Logger] = None,
-        package_name: Optional[str] = None
+        package_name: Optional[str] = None,
+        safe: bool = False,
     ):
         """Constructor.
 
@@ -119,6 +121,11 @@ class AppConfigurator:
                 configuration file to load
             package_name: name of the package to import the base configuration
                 of the app from
+            safe: specifies whether the configurator should run in safe mode.
+                In safe mode, the parsers used to parse configuration files are
+                forced to run in safe mode that aims to prevent arbitrary code
+                execution and freezing on maliciously crafted input. It is
+                highly advised to set this parameter to `True`.
         """
         self._config = config if config is not None else {}
         if default_filename is None:
@@ -133,6 +140,7 @@ class AppConfigurator:
         self._loaded_files = []
         self._log = log
         self._package_name = package_name
+        self._safe = bool(safe)
 
     def configure(self, filename: Optional[str] = None) -> bool:
         """Configures the application.
@@ -288,7 +296,7 @@ class AppConfigurator:
                 elif filename.endswith(".json5"):
                     config = load_json5(config_file)
                     cfg_format = ConfigurationFormat.JSON5
-                else:
+                elif not self._safe:
                     exec(compile(config_file.read(), filename, "exec"), config)
                     self._remove_python_builtins_from_config(config)
                     cfg_format = ConfigurationFormat.PYTHON
@@ -298,12 +306,19 @@ class AppConfigurator:
             else:
                 raise
 
+        if exists and cfg_format is None:
+            if self._log:
+                self._log.warn(
+                    f"Configuration file {original!r} is in an unknown format"
+                )
+            return False
+
         snapshot = deepcopy(self._config)
         self._load_configuration_from_dict(config)
 
         if not exists and mandatory:
             if self._log:
-                self._log.warn("Cannot load configuration from {0!r}".format(original))
+                self._log.warn(f"Cannot load configuration from {original!r}")
             return False
         elif exists:
             if cfg_format is not None:
@@ -312,7 +327,7 @@ class AppConfigurator:
                 )
             if self._log:
                 self._log.info(
-                    "Loaded configuration from {0!r}".format(original),
+                    f"Loaded configuration from {original!r}",
                     extra={"semantics": "success"},
                 )
 
