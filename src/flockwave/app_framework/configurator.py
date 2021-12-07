@@ -5,15 +5,16 @@ sources.
 import errno
 import os
 
-from commentjson import load as load_jsonc
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
 from importlib import import_module
 from json import load as load_json
+from json5 import load as load_json5, loads as load_json5_from_string
 from logging import Logger
+from re import sub
 from types import ModuleType
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, IO, Iterable, List, Optional, Tuple, Union
 
 __alL__ = ("AppConfigurator", "Configuration")
 
@@ -44,11 +45,21 @@ def _merge_dicts(source, into) -> None:
             into[key] = value
 
 
+def load_json5_with_hask_mark_styled_comments(input: IO[bytes]) -> Any:
+    """Helper function to load JSON5 files while dealing with the hashmark-style
+    comments that were commonly found in earlier versions of our configuration
+    files.
+    """
+    lines = [sub(r"^\s*#.*", "", line) for line in input]  # type: ignore
+    return load_json5_from_string("".join(lines))
+
+
 class ConfigurationFormat(Enum):
     """Enum representing the configuration file formats that we support."""
 
     JSON = "json"
     JSONC = "jsonc"
+    JSON5 = "json5"
     PYTHON = "python"
 
 
@@ -272,8 +283,11 @@ class AppConfigurator:
                     config = load_json(config_file)
                     cfg_format = ConfigurationFormat.JSON
                 elif filename.endswith(".cjson") or filename.endswith(".jsonc"):
-                    config = load_jsonc(config_file)
+                    config = load_json5_with_hask_mark_styled_comments(config_file)
                     cfg_format = ConfigurationFormat.JSONC
+                elif filename.endswith(".json5"):
+                    config = load_json5(config_file)
+                    cfg_format = ConfigurationFormat.JSON5
                 else:
                     exec(compile(config_file.read(), filename, "exec"), config)
                     self._remove_python_builtins_from_config(config)
