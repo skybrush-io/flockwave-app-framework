@@ -9,6 +9,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
 from importlib import import_module
+from inspect import ismodule
 from json import load as load_json
 from json5 import load as load_json5, loads as load_json5_from_string
 from logging import Logger
@@ -216,18 +217,20 @@ class AppConfigurator:
 
     def _load_base_configuration(self) -> None:
         """Loads the default configuration of the application from the
-        `flockctrl.server.config` module.
+        `.config` submodule of the associated package.
+
+        The contents of the module will be deep-copied.
         """
         if not self._package_name:
-            config = None
+            module = None
         else:
             try:
-                config = import_module(".config", self._package_name)
+                module = import_module(".config", self._package_name)
             except ModuleNotFoundError:
-                config = None
+                module = None
 
-        if config:
-            self._load_configuration_from_module(config)
+        if module:
+            self._load_configuration_from_module(module, deep_copy=True)
 
     def _load_configuration(self, config: Optional[str] = None) -> bool:
         """Loads the configuration of the application from the following
@@ -350,7 +353,8 @@ class AppConfigurator:
         """Loads configuration settings from the given Python dictionary.
 
         Parameters:
-            config: the configuration dict to load.
+            config: the configuration dict to load. Items in the dictionary are
+                used as-is, _without_ depp-copying them.
         """
         for key, value in config.items():
             if self._key_filter(key):
@@ -363,14 +367,25 @@ class AppConfigurator:
                 else:
                     self._config[key] = value
 
-    def _load_configuration_from_module(self, config: ModuleType) -> None:
+    def _load_configuration_from_module(
+        self, config: ModuleType, *, deep_copy: bool = False
+    ) -> None:
         """Loads configuration settings from the given Python module.
 
         Parameters:
             config: the configuration object to load.
+            deep_copy: whether to deep-copy the contents of the module.
+                ``False`` will create a shallow copy (i.e. top-level keys of
+                the module will be copied, values will be referenced).
+                ``True`` will create a deep copy.
         """
         contents = {k: getattr(config, k) for k in dir(config)}
         self._remove_python_builtins_from_config(contents)
+
+        if deep_copy:
+            # Exclude modules from deep-copying
+            contents = deepcopy({k: v for k, v in contents.items() if not ismodule(v)})
+
         return self._load_configuration_from_dict(contents)
 
     def _load_configuration_from_object(self, config: Any) -> None:
