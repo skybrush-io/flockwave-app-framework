@@ -46,6 +46,32 @@ def _merge_dicts(source, into) -> None:
             into[key] = value
 
 
+def _prune_dict(first, second) -> None:
+    """Compares two dictionaries recursively and removes those items from the
+    first one that are identical to the items with the same key from the second
+    dictionary.
+
+    After pruning, merging the pruned dictionary into `second` should yield a
+    dictionary that is identical to `first`.
+    """
+    to_delete: List[str] = []
+
+    for key, value in first.items():
+        if key in second:
+            second_value = second[key]
+            if isinstance(value, dict) and isinstance(second_value, dict):
+                _prune_dict(value, second_value)
+                if not value:
+                    to_delete.append(key)
+            elif value == second_value:
+                to_delete.append(key)
+        elif isinstance(value, dict) and not value:
+            to_delete.append(key)
+
+    for key in to_delete:
+        del first[key]
+
+
 def load_json5_with_hask_mark_styled_comments(
     input: IO[bytes], *, encoding: str = "utf-8"
 ) -> Any:
@@ -156,6 +182,46 @@ class AppConfigurator:
             whether the configuration sources were processed successfully
         """
         return self._load_configuration(filename)
+
+    def minimize_configuration(
+        self, config: Configuration, defaults: Configuration
+    ) -> None:
+        """Returns a minimal representation of the given configuration object
+        by comparing it to a set of defaults and omitting keys whose values are
+        identical to their defaults.
+
+        The configuration object in the first argument will be modified
+        _in place_! Make sure to create a deep copy first if you do not own
+        the configuration object. The second argument will not be modified.
+        """
+        for top_level_key in list(config.keys()):
+            if not self.key_filter(top_level_key):
+                # This top-level key may not appear in the configuration so
+                # remove it
+                del config[top_level_key]
+                continue
+
+            if top_level_key not in defaults:
+                # This top-level key does not appear in the defaults so it must
+                # be kept
+                continue
+
+            top_level_default_value = defaults[top_level_key]
+            top_level_value = config[top_level_key]
+
+            if not self.merge_keys(top_level_key):
+                # This top-level key is replaced when the user provides a new
+                # value so just compare the values
+                if top_level_default_value == top_level_value:
+                    del config[top_level_key]
+            else:
+                # This top-level key is merged with any new values from the
+                # configuration files, so compare the subkeys recursively and
+                # include only those branches where the configurations are different
+                if isinstance(top_level_value, dict) and isinstance(
+                    top_level_default_value, dict
+                ):
+                    _prune_dict(top_level_value, top_level_default_value)
 
     @property
     def key_filter(self) -> Callable[[str], bool]:
