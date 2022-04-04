@@ -6,6 +6,7 @@ authors = ["Tamas Nepusz <tamas@collmot.com>"]
 packages = [
     { include = "flockwave", from = "src" }
 ]
+license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.7"
