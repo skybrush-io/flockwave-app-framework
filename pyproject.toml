@@ -10,13 +10,13 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.7"
 trio = ">=0.17.0"
-flockwave-conn = {version = ">=2.11.3,<5.0.0", optional = true}
-flockwave-ext = {version = "^1.5.0", optional = true}
-urwid-uikit = {version = "^2.0.0", optional = true}
+flockwave-conn = {version = ">=2.11.3,<5.0.0", optional = true, source = "fury"}
+flockwave-ext = {version = "^1.5.0", optional = true, source = "fury"}
+urwid-uikit = {version = "^2.0.0", optional = true, source = "fury"}
 json5 = ">=0.9.6"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2.5"
+pytest = "^7.1.1"
 coverage = {extras = ["toml"], version = "^6.0"}
 pytest-cov = "^3.0.0"
 
@@ -27,6 +27,12 @@ console = ["urwid-uikit"]
 [[tool.poetry.source]]
 name = "collmot"
 url = "https://pypi.collmot.com/simple/"
+secondary = true
+
+[[tool.poetry.source]]
+name = "fury"
+url = "https://pypi.fury.io/skybrush/"
+secondary = true
 
 [tool.coverage.paths]
 source = ["src"]
