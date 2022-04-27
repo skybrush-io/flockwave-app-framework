@@ -11,7 +11,7 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.7"
 trio = ">=0.17.0"
-flockwave-conn = {version = ">=2.11.3,<5.0.0", optional = true, source = "fury"}
+flockwave-conn = {version = ">=2.11.3,<6.0.0", optional = true, source = "fury"}
 flockwave-ext = {version = "^1.5.0", optional = true, source = "fury"}
 urwid-uikit = {version = "^2.0.0", optional = true, source = "fury"}
 json5 = ">=0.9.6"
