@@ -359,7 +359,7 @@ class AppConfigurator:
         Returns:
             whether the configuration was loaded successfully
         """
-        original, filename = filename, os.path.abspath(filename)
+        filename = os.path.abspath(filename)
 
         config = {}
 
@@ -388,7 +388,7 @@ class AppConfigurator:
 
         if exists and cfg_format is None:
             if self._log:
-                message = f"Configuration file {original!r} is in an unknown format"
+                message = f"Configuration file {filename!r} is in an unknown format"
                 if mandatory:
                     self._log.error(message)
                 else:
@@ -400,7 +400,7 @@ class AppConfigurator:
 
         if not exists and mandatory:
             if self._log:
-                self._log.error(f"Cannot load configuration from {original!r}")
+                self._log.error(f"Cannot load configuration from {filename!r}")
             return False
         elif exists:
             if cfg_format is not None:
@@ -409,7 +409,7 @@ class AppConfigurator:
                 )
             if self._log:
                 self._log.info(
-                    f"Loaded configuration from {original!r}",
+                    f"Loaded configuration from {filename!r}",
                     extra={"semantics": "success"},
                 )
 
