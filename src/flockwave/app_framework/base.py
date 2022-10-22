@@ -1,9 +1,10 @@
 """Base classes for implementing applications."""
 
+from exceptiongroup import ExceptionGroup, catch
 from functools import partial
 from importlib import import_module
 from logging import getLogger, Logger
-from trio import CancelScope, MultiError, Nursery, open_nursery
+from trio import CancelScope, Nursery, open_nursery
 from typing import Awaitable, Callable, List, Optional, Union
 
 from .configurator import AppConfigurator, Configuration
@@ -192,12 +193,12 @@ class AsyncApp:
             self.prepare()
 
         # Helper function to ignore KeyboardInterrupt exceptions even if
-        # they are wrapped in a Trio MultiError
-        def ignore_keyboard_interrupt(exc):
-            return None if isinstance(exc, KeyboardInterrupt) else exc
+        # they are wrapped in an exception group
+        def ignore_keyboard_interrupt(exc: ExceptionGroup) -> None:
+            pass
 
         try:
-            with MultiError.catch(ignore_keyboard_interrupt):
+            with catch({KeyboardInterrupt: ignore_keyboard_interrupt}):  # type: ignore
                 async with open_nursery() as nursery:
                     self._nursery = nursery
 

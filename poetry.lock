@@ -27,8 +27,8 @@ sniffio = ">=1.1"
 typing-extensions = {version = "*", markers = "python_version < \"3.8\""}
 
 [package.extras]
-doc = ["packaging", "sphinx-rtd-theme", "sphinx-autodoc-typehints (>=1.2.0)"]
-test = ["coverage[toml] (>=4.5)", "hypothesis (>=4.0)", "pytest (>=6.0)", "pytest-mock (>=3.6.1)", "trustme", "contextlib2", "uvloop (<0.15)", "mock (>=4)", "uvloop (>=0.15)"]
+doc = ["packaging", "sphinx-autodoc-typehints (>=1.2.0)", "sphinx-rtd-theme"]
+test = ["contextlib2", "coverage[toml] (>=4.5)", "hypothesis (>=4.0)", "mock (>=4)", "pytest (>=6.0)", "pytest-mock (>=3.6.1)", "trustme", "uvloop (<0.15)", "uvloop (>=0.15)"]
 trio = ["trio (>=0.16)"]
 
 [[package]]
@@ -56,10 +56,10 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [package.extras]
-dev = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "zope.interface", "furo", "sphinx", "sphinx-notfound-page", "pre-commit", "cloudpickle"]
-docs = ["furo", "sphinx", "zope.interface", "sphinx-notfound-page"]
-tests = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "zope.interface", "cloudpickle"]
-tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "cloudpickle"]
+dev = ["cloudpickle", "coverage[toml] (>=5.0.2)", "furo", "hypothesis", "mypy", "pre-commit", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "six", "sphinx", "sphinx-notfound-page", "zope.interface"]
+docs = ["furo", "sphinx", "sphinx-notfound-page", "zope.interface"]
+tests = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "six", "zope.interface"]
+tests-no-zope = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "six"]
 
 [[package]]
 name = "blinker"
@@ -103,6 +103,17 @@ tomli = {version = "*", optional = true, markers = "extra == \"toml\""}
 toml = ["tomli"]
 
 [[package]]
+name = "exceptiongroup"
+version = "1.0.0rc9"
+description = "Backport of PEP 654 (exception groups)"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+test = ["pytest (>=6)"]
+
+[[package]]
 name = "flockwave-async"
 version = "1.3.1"
 description = "Asynchronous utility functions and classes, mostly for Trio"
@@ -137,8 +148,8 @@ trio = ">=0.18.0"
 trio-util = ">=0.5.0"
 
 [package.extras]
-serial = ["pyserial (>=3.4,<4.0)"]
 rpc = ["tinyrpc[msgpack] (>=1.0.4,<2.0.0)"]
+serial = ["pyserial (>=3.4,<4.0)"]
 
 [package.source]
 type = "legacy"
@@ -221,9 +232,9 @@ typing-extensions = {version = ">=3.6.4", markers = "python_version < \"3.8\""}
 zipp = ">=0.5"
 
 [package.extras]
-docs = ["sphinx", "jaraco.packaging (>=9)", "rst.linker (>=1.9)"]
+docs = ["jaraco.packaging (>=9)", "rst.linker (>=1.9)", "sphinx"]
 perf = ["ipython"]
-testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-cov", "pytest-enabler (>=1.0.1)", "packaging", "pyfakefs", "flufl.flake8", "pytest-perf (>=0.9.2)", "pytest-black (>=0.3.7)", "pytest-mypy (>=0.9.1)", "importlib-resources (>=1.3)"]
+testing = ["flufl.flake8", "importlib-resources (>=1.3)", "packaging", "pyfakefs", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.0.1)", "pytest-flake8", "pytest-mypy (>=0.9.1)", "pytest-perf (>=0.9.2)"]
 
 [[package]]
 name = "iniconfig"
@@ -345,7 +356,7 @@ optional = false
 python-versions = ">=3.6.8"
 
 [package.extras]
-diagrams = ["railroad-diagrams", "jinja2"]
+diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
 name = "pytest"
@@ -382,7 +393,7 @@ coverage = {version = ">=5.2.1", extras = ["toml"]}
 pytest = ">=4.6"
 
 [package.extras]
-testing = ["fields", "hunter", "process-tests", "six", "pytest-xdist", "virtualenv"]
+testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtualenv"]
 
 [[package]]
 name = "sniffio"
@@ -478,8 +489,8 @@ optional = false
 python-versions = ">=3.7"
 
 [package.extras]
-docs = ["sphinx", "jaraco.packaging (>=9)", "rst.linker (>=1.9)"]
-testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-cov", "pytest-enabler (>=1.0.1)", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy (>=0.9.1)"]
+docs = ["jaraco.packaging (>=9)", "rst.linker (>=1.9)", "sphinx"]
+testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.0.1)", "pytest-flake8", "pytest-mypy (>=0.9.1)"]
 
 [extras]
 console = ["urwid-uikit"]
@@ -488,7 +499,7 @@ daemon = ["flockwave-conn", "flockwave-ext"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "0771c08a3da97b32d93f1c9a71ae066f3ef3bb1720390b99f2cef554c15f5a73"
+content-hash = "7e2fc2c68b7fe6b108ac2a31117f3c730b0188445d28e0a620af4523cd21ab5d"
 
 [metadata.files]
 aio-net-events = [
@@ -613,6 +624,10 @@ coverage = [
     {file = "coverage-6.3.2-pp36.pp37.pp38-none-any.whl", hash = "sha256:18d520c6860515a771708937d2f78f63cc47ab3b80cb78e86573b0a760161faf"},
     {file = "coverage-6.3.2.tar.gz", hash = "sha256:03e2a7826086b91ef345ff18742ee9fc47a6839ccd517061ef8fa1976e652ce9"},
 ]
+exceptiongroup = [
+    {file = "exceptiongroup-1.0.0rc9-py3-none-any.whl", hash = "sha256:2e3c3fc1538a094aab74fad52d6c33fc94de3dfee3ee01f187c0e0c72aec5337"},
+    {file = "exceptiongroup-1.0.0rc9.tar.gz", hash = "sha256:9086a4a21ef9b31c72181c77c040a074ba0889ee56a7b289ff0afb0d97655f96"},
+]
 flockwave-async = [
     {file = "flockwave-async-1.3.1.tar.gz", hash = "sha256:1981ce4582ccc815b73fe41142fc869c718e76eaca726456c2e468edece0ad14"},
     {file = "flockwave_async-1.3.1-py3-none-any.whl", hash = "sha256:7e3d46e85f68941c3abd5e9b63ceec30b896ceedd5074e0eb6d99818f8557cad"},
@@ -630,8 +645,8 @@ flockwave-net = [
     {file = "flockwave_net-3.0.1-py3-none-any.whl", hash = "sha256:58af9099fed7cd45acf1648332259532bf37e29208dfb32b716db24c5ad7676b"},
 ]
 flockwave-parsers = [
-    {file = "flockwave-parsers-2.0.1.tar.gz", hash = "md5:ae9dc623ae0e553ca2daa0be6ecccc9d"},
-    {file = "flockwave_parsers-2.0.1-py3-none-any.whl", hash = "md5:e3d000905186b992a20e1a75c20a7a14"},
+    {file = "flockwave-parsers-2.0.1.tar.gz", hash = "sha256:f276741f176cad36e0960f61da241063feee923e082d171bda19e6a4634ba268"},
+    {file = "flockwave_parsers-2.0.1-py3-none-any.whl", hash = "sha256:6cd3cea73dd4178cf39284176b7c867e617013ffbb842dc18517da6c1269daab"},
 ]
 idna = [
     {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
@@ -711,6 +726,7 @@ pyobjc-core = [
     {file = "pyobjc_core-8.5-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:c0071686976d7ea8c14690950e504a13cb22b4ebb2bc7b5ec47c1c1c0f6eff41"},
 ]
 pyobjc-framework-cocoa = [
+    {file = "pyobjc-framework-Cocoa-8.5.tar.gz", hash = "sha256:569bd3a020f64b536fb2d1c085b37553e50558c9f907e08b73ffc16ae68e1861"},
     {file = "pyobjc_framework_Cocoa-8.5-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:7a7c160416696bf6035dfcdf0e603aaa52858d6afcddfcc5ab41733619ac2529"},
     {file = "pyobjc_framework_Cocoa-8.5-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:6ceba444282030be8596b812260e8d28b671254a51052ad778d32da6e17db847"},
     {file = "pyobjc_framework_Cocoa-8.5-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:f46b2b161b8dd40c7b9e00bc69636c3e6480b2704a69aee22ee0154befbe163a"},
@@ -719,6 +735,7 @@ pyobjc-framework-cocoa = [
     {file = "pyobjc_framework_Cocoa-8.5-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:baa2947f76b119a3360973d74d57d6dada87ac527bab9a88f31596af392f123c"},
 ]
 pyobjc-framework-systemconfiguration = [
+    {file = "pyobjc-framework-SystemConfiguration-8.5.tar.gz", hash = "sha256:fb34bb38a9ae1597c4365b15ed8ffdd9243a20661b5619f7667691270206a1f4"},
     {file = "pyobjc_framework_SystemConfiguration-8.5-cp36-abi3-macosx_10_9_universal2.whl", hash = "sha256:8e5b5141953313896655010f9d6d93f43452cf2d00a64acde3fd6242bc65e5d1"},
     {file = "pyobjc_framework_SystemConfiguration-8.5-cp36-abi3-macosx_10_9_x86_64.whl", hash = "sha256:42a688a84836b3eec7bc63524315a9f733afbe20cb5eb9e04e2b49dcbb8c37ae"},
     {file = "pyobjc_framework_SystemConfiguration-8.5-cp36-abi3-macosx_11_0_universal2.whl", hash = "sha256:356090d6c985efd700479c5f7d2be0038702820fd6693e26161808bcc08f25df"},
