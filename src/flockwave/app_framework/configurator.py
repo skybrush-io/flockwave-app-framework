@@ -19,8 +19,8 @@ from typing import Any, Callable, Dict, IO, Iterable, List, Optional, Tuple, Uni
 
 __alL__ = ("AppConfigurator", "Configuration")
 
-#: Type specification for configuration objects
 Configuration = Dict[str, Any]
+"""Type specification for configuration objects"""
 
 
 def _always_false(*args, **kwds) -> bool:

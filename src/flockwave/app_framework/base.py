@@ -21,14 +21,14 @@ class AsyncApp:
     this base class.
     """
 
-    #: Dictionary holding the configuration options of the application
     config: Configuration
+    """Dictionary holding the configuration options of the application"""
 
-    #: Whether the app is in debug mode
     debug: bool
+    """Whether the app is in debug mode"""
 
-    #: The logger of the application
     log: Logger
+    """The logger of the application"""
 
     _app_name: str
     _configurator: Optional[AppConfigurator]

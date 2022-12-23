@@ -10,8 +10,8 @@ if TYPE_CHECKING:
 
 __all__ = ("Palette", "TerminalApp")
 
-#: Typing specification for urwid color palettes
 Palette = List[Tuple[str, str, str]]
+"""Typing specification for urwid color palettes"""
 
 
 class TerminalApp(AsyncApp):
