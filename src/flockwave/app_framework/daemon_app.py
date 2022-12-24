@@ -7,6 +7,7 @@ from typing import Optional, Union, TYPE_CHECKING
 
 from .base import AsyncApp
 from .errors import ApplicationExit
+from .sd_notify import Notifier
 
 if TYPE_CHECKING:
     from flockwave.connections import (
@@ -95,6 +96,8 @@ class DaemonApp(AsyncApp):
         if self.connection_supervisor:
             nursery.start_soon(self.connection_supervisor.run)
 
+        await Notifier.get_instance().send_ready_signal()
+
     def import_api(self, extension_name: str) -> "ExtensionAPIProxy":
         """Imports the API exposed by an extension.
 
@@ -146,5 +149,6 @@ class DaemonApp(AsyncApp):
         """Called when the application is about to shut down. Calls all
         registered shutdown hooks and performs additional cleanup if needed.
         """
+        await Notifier.get_instance().send_stopping_signal()
         await super().teardown()
         await self.extension_manager.teardown()
