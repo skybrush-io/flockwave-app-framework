@@ -65,8 +65,6 @@ def _prune_dict(first, second) -> None:
                     to_delete.append(key)
             elif value == second_value:
                 to_delete.append(key)
-        elif isinstance(value, dict) and not value:
-            to_delete.append(key)
 
     for key in to_delete:
         del first[key]
