@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "flockwave-app-framework"
-version = "2.5.0"
+version = "2.5.1"
 description = "Generic app framework for CLI based apps in the Skybrush suite"
 authors = ["Tamas Nepusz <tamas@collmot.com>"]
 packages = [
