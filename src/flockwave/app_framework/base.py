@@ -1,6 +1,6 @@
 """Base classes for implementing applications."""
 
-from exceptiongroup import ExceptionGroup, catch
+from exceptiongroup import catch
 from functools import partial
 from importlib import import_module
 from logging import getLogger, Logger
@@ -194,11 +194,11 @@ class AsyncApp:
 
         # Helper function to ignore KeyboardInterrupt exceptions even if
         # they are wrapped in an exception group
-        def ignore_keyboard_interrupt(exc: ExceptionGroup) -> None:
+        def ignore_keyboard_interrupt(exc) -> None:
             pass
 
         try:
-            with catch({KeyboardInterrupt: ignore_keyboard_interrupt}):  # type: ignore
+            with catch({KeyboardInterrupt: ignore_keyboard_interrupt}):
                 async with open_nursery() as nursery:
                     self._nursery = nursery
 
