@@ -42,7 +42,9 @@ class Notifier:
         try:
             from trio.socket import AF_UNIX
         except ImportError:
-            raise RuntimeError("UNIX domain sockets not supported on this platform")
+            raise RuntimeError(
+                "UNIX domain sockets are not supported on this platform"
+            ) from None
 
         sock = socket(family=AF_UNIX, type=SOCK_DGRAM)
         path = str(path)
