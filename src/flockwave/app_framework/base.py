@@ -309,11 +309,13 @@ class AsyncApp(BaseApp):
         return scope
 
     @final
-    async def run(self) -> None:
+    async def run(self) -> int:
         """Runs the application."""
 
         if not self._prepared:
-            self.prepare()
+            exit_code = self.prepare()
+            if exit_code:
+                return exit_code
 
         # Helper function to ignore KeyboardInterrupt exceptions even if
         # they are wrapped in an exception group
@@ -335,8 +337,11 @@ class AsyncApp(BaseApp):
 
                     await self.ready()
 
+            return 0
+
         except ApplicationExit as ex:
             self.log.error(str(ex) or "Received request to stop application.")
+            return ex.exit_code
 
         finally:
             self._nursery = None
@@ -387,7 +392,7 @@ class SyncApp(BaseApp):
     """
 
     @final
-    def run(self) -> None:
+    def run(self) -> int:
         """Runs the application.
 
         Do not override this method; override the `prepare(), `ready()`,
@@ -395,13 +400,22 @@ class SyncApp(BaseApp):
         """
 
         if not self._prepared:
-            self.prepare()
+            exit_code = self.prepare()
+            if exit_code:
+                return exit_code
 
         try:
             self.ready()
             self.run_main()
+            return 0
+
         except ApplicationExit as ex:
             self.log.error(str(ex) or "Received request to stop application.")
+            return ex.exit_code
+
+        except KeyboardInterrupt:
+            print()
+            return 0
 
         finally:
             self.teardown()

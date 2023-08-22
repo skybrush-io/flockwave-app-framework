@@ -46,7 +46,7 @@ class ASGIWebServerApp(SyncApp):
         """
         from argparse import ArgumentParser
 
-        parser = ArgumentParser(prog=self.app_full_name)
+        parser = ArgumentParser(prog=self.app_name, description=self.app_full_name)
 
         parser.add_argument(
             "--version", action="version", version=f"%(prog)s version {self.version}"
@@ -57,6 +57,7 @@ class ASGIWebServerApp(SyncApp):
             metavar="PORT",
             help="port that the server should be listening on",
             default=8000,
+            type=int,
         )
 
         if self.allow_public:
@@ -108,6 +109,7 @@ class ASGIWebServerApp(SyncApp):
 
     def ready(self) -> None:
         self.print_banner()
+        print()
 
     def run_main(self) -> None:
         import uvicorn
