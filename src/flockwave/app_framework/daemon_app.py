@@ -39,7 +39,12 @@ class DaemonApp(AsyncApp):
     extension_manager: "ExtensionManager"
 
     def __init__(
-        self, name: str, package_name: str, *, log: Optional[Union[str, Logger]] = None
+        self,
+        name: str,
+        package_name: str,
+        *,
+        full_name: Optional[str] = None,
+        log: Optional[Union[str, Logger]] = None,
     ):
         """Constructor.
 
@@ -53,12 +58,15 @@ class DaemonApp(AsyncApp):
                 be in a Python module named `config` within this package.
                 Extensions corresponding to the daemon app are looked up in the
                 `ext` subpackage of this package.
+            full_name: longer, human-readable name of the application, which
+                may also contain spaces. Falls back to the short app name if
+                not specified.
             log: name of the logger to use by the app; defaults to the
                 application name. You may also pass a Logger instance here
         """
         self.connection_supervisor = None
         self.extension_manager = None  # type: ignore
-        super().__init__(name, package_name, log=log)
+        super().__init__(name, package_name, full_name=full_name, log=log)
 
     def _create_basic_components(self) -> None:
         try:
@@ -82,7 +90,7 @@ class DaemonApp(AsyncApp):
                     configuration=self.config.get("EXTENSIONS", {}),
                     app=self,
                 )
-            )
+            )  # type: ignore
         except ExitRequestedFromExtension as ex:
             raise ApplicationExit(
                 str(ex) or "Application exit requested from extension"
@@ -95,8 +103,6 @@ class DaemonApp(AsyncApp):
 
         if self.connection_supervisor:
             nursery.start_soon(self.connection_supervisor.run)
-
-        await Notifier.get_instance().send_ready_signal()
 
     def import_api(self, extension_name: str) -> "ExtensionAPIProxy":
         """Imports the API exposed by an extension.
@@ -144,6 +150,10 @@ class DaemonApp(AsyncApp):
             )
 
         await self.connection_supervisor.supervise(connection, task=task, policy=policy)
+
+    async def ready(self) -> None:
+        await super().ready()
+        await Notifier.get_instance().send_ready_signal()
 
     async def teardown(self) -> None:
         """Called when the application is about to shut down. Calls all

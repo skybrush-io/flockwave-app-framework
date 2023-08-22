@@ -5,20 +5,19 @@ from functools import partial
 from importlib import import_module
 from logging import getLogger, Logger
 from trio import CancelScope, Nursery, open_nursery
-from typing import Awaitable, Callable, List, Optional, Union
+from typing import Awaitable, Callable, List, Optional, Union, final
 
 from .configurator import AppConfigurator, Configuration
 from .errors import ApplicationExit
 
-__all__ = ("AsyncApp",)
+__all__ = ("AsyncApp", "SyncApp")
 
 
-class AsyncApp:
-    """Base class for apps that revolve around running several asynchronous
-    tasks concurrently.
+class BaseApp:
+    """Base class for all application subclasses in this framework.
 
-    Basically almost all of our apps except the most simple ones are based on
-    this base class.
+    This base class holds all the code that is common for AsyncApp_ and
+    SyncApp_.
     """
 
     config: Configuration
@@ -31,27 +30,35 @@ class AsyncApp:
     """The logger of the application"""
 
     _app_name: str
+    _app_full_name: Optional[str]
     _configurator: Optional[AppConfigurator]
-    _nursery: Optional[Nursery]
     _package_name: str
-    _pending_tasks: List[Callable[[], Awaitable[None]]]
-    _prepared: bool
+    _prepared: bool = False
+    _version: Optional[str]
 
     def __init__(
-        self, name: str, package_name: str, *, log: Optional[Union[str, Logger]] = None
+        self,
+        name: str,
+        package_name: str,
+        *,
+        full_name: Optional[str] = None,
+        log: Optional[Union[str, Logger]] = None,
     ):
         """Constructor.
 
         Parameters:
-            name: short, lowercase, human-readable name of the daemon
-                application, without spaces. Used to derive the name of the
-                root logger, the default configuration file and the environment
-                variable that holds the configuration filename override.
+            name: short, lowercase, human-readable name of the application,
+                without spaces. Used to derive the name of the root logger, the
+                default configuration file and the environment variable that
+                holds the configuration filename override.
             package_name: name of the Python package that holds the code of the
-                daemon app. The default configuration of the app is assumed to
+                application. The default configuration of the app is assumed to
                 be in a Python module named `config` within this package.
-                Extensions corresponding to the daemon app are looked up in the
+                Extensions corresponding to the application are looked up in the
                 `ext` subpackage of this package.
+            full_name: longer, human-readable name of the application, which
+                may also contain spaces. Falls back to the short app name if
+                not specified.
             log: name of the logger to use by the app; defaults to the
                 application name. You may also pass a Logger instance here
         """
@@ -59,9 +66,11 @@ class AsyncApp:
             raise ValueError("App name may not contain spaces")
 
         self._app_name = name
+        self._app_full_name = full_name
         self._configurator = None
         self._package_name = package_name
         self._prepared = False
+        self._version = None
 
         self.config = {}
         self.debug = False
@@ -73,11 +82,6 @@ class AsyncApp:
             self.log = getLogger(logger)
         else:
             raise TypeError("Invalid logger type, expected str or Logger")
-
-        # Placeholder for a nursery that parents all tasks in the app.
-        # This will be set to a real nursery when the app starts.
-        self._nursery = None
-        self._pending_tasks = []
 
         self._create_basic_components()
         self._create_components()
@@ -145,7 +149,125 @@ class AsyncApp:
 
         result = self._process_configuration(self.config)
         self._prepared = True
+
         return result
+
+    def _create_components(self) -> None:
+        """Creates the components of the application.
+
+        This function is called by the constructor once at construction time.
+        You should not need to call it later.
+
+        The default implementation of this function does nothing; you can safely
+        override it in derived classes without calling the superclass implementation.
+
+        The configuration of the app is not loaded yet when this function is
+        executed. Avoid querying the configuration of the app here because
+        the settings will not be up-to-date yet. Use `_process_configuration()`
+        for any preparations that depend on the configuration.
+        """
+        pass
+
+    def _process_configuration(self, config: Configuration) -> Optional[int]:
+        """Processes the configuration of the application after it was
+        configured.
+
+        The default implementation of this function does nothing; you can safely
+        override it in derived classes without calling the superclass implementation.
+
+        Returns:
+            error code to terminate the app with if there was an error while
+            processing the configuration, or ``None`` if the processing was
+            successful
+        """
+        pass
+
+    @property
+    def app_name(self) -> str:
+        """Short, human-readable name of the application, without spaces."""
+        return self._app_name
+
+    @property
+    def app_full_name(self) -> str:
+        """Longer, human-readable name of the application, may contain spaces.
+        Defaults to the short name of the application. Use this property in
+        contexts where you want to present the full name of the application and
+        it does not matter if it contains spaces.
+        """
+        return self._app_full_name or self._app_name
+
+    @property
+    def configurator(self) -> AppConfigurator:
+        """The configurator object of the application that was responsible for
+        loading the configuration from various sources. Must be called only after
+        the app was prepared with `prepare()`.
+
+        Raises:
+            RuntimeError: when called before the app was prepared
+        """
+        if self._configurator is None:
+            raise RuntimeError("Application was not prepared yet")
+        return self._configurator
+
+    @property
+    def version(self) -> str:
+        """Returns the version number of the application.
+
+        The version number is imported from the `.version` module of the
+        application package. Returns `0.0.0` if there is no such module.
+        """
+        if self._version is None:
+            try:
+                version_module = import_module(".version", self._package_name)
+            except ImportError:
+                version_module = None
+            self._version = str(getattr(version_module, "__version__", "0.0.0"))
+        return self._version
+
+
+class AsyncApp(BaseApp):
+    """Base class for apps that revolve around running several asynchronous
+    tasks concurrently.
+
+    Basically almost all of our apps except the most simple ones are based
+    either on this base class or on SyncApp_.
+    """
+
+    _nursery: Optional[Nursery]
+    _pending_tasks: List[Callable[[], Awaitable[None]]]
+
+    def __init__(
+        self,
+        name: str,
+        package_name: str,
+        *,
+        full_name: Optional[str] = None,
+        log: Optional[Union[str, Logger]] = None,
+    ):
+        """Constructor.
+
+        Parameters:
+            name: short, lowercase, human-readable name of the asynchronous
+                application, without spaces. Used to derive the name of the
+                root logger, the default configuration file and the environment
+                variable that holds the configuration filename override.
+            package_name: name of the Python package that holds the code of the
+                async app. The default configuration of the app is assumed to
+                be in a Python module named `config` within this package.
+                Extensions corresponding to the async app are looked up in the
+                `ext` subpackage of this package.
+            log: name of the logger to use by the app; defaults to the
+                application name. You may also pass a Logger instance here
+            full_name: longer, human-readable name of the application, which
+                may also contain spaces. Falls back to the short app name if
+                not specified.
+        """
+        super().__init__(name, package_name, full_name=full_name, log=log)
+
+        # Placeholder for a nursery that parents all tasks in the app.
+        # This will be set to a real nursery when the app starts.
+        self._nursery = None
+        self._pending_tasks = []
 
     def request_shutdown(self) -> None:
         """Requests tha application to shut down in a clean way.
@@ -186,6 +308,7 @@ class AsyncApp:
 
         return scope
 
+    @final
     async def run(self) -> None:
         """Runs the application."""
 
@@ -210,12 +333,23 @@ class AsyncApp:
                     for task in tasks:
                         nursery.start_soon(task)
 
+                    await self.ready()
+
         except ApplicationExit as ex:
             self.log.error(str(ex) or "Received request to stop application.")
 
         finally:
             self._nursery = None
             await self.teardown()
+
+    async def ready(self) -> None:
+        """Called when the application is ready and all the background tasks
+        have been scheduled to start.
+
+        Make sure to call the superclass implementation if you override this
+        method.
+        """
+        pass
 
     async def teardown(self) -> None:
         """Called when the application is about to shut down.
@@ -225,40 +359,10 @@ class AsyncApp:
         """
         pass
 
-    def _create_components(self) -> None:
-        """Creates the components of the application.
-
-        This function is called by the constructor once at construction time.
-        You should not need to call it later.
-
-        The default implementation of this function does nothing; you can safely
-        override it in derived classes without calling the superclass implementation.
-
-        The configuration of the server is not loaded yet when this function is
-        executed. Avoid querying the configuration of the server here because
-        the settings will not be up-to-date yet. Use `_process_configuration()`
-        for any preparations that depend on the configuration.
-        """
-        pass
-
     async def _on_nursery_created(self, nursery: Nursery) -> None:
         """Function that is called by the `run()` method when the task nursery
         was created and that allows us to launch certain important tasks in the
         nursery before we launch the rest.
-        """
-        pass
-
-    def _process_configuration(self, config: Configuration) -> Optional[int]:
-        """Processes the configuration of the application after it was
-        configured.
-
-        The default implementation of this function does nothing; you can safely
-        override it in derived classes without calling the superclass implementation.
-
-        Returns:
-            error code to terminate the app with if there was an error while
-            processing the configuration, or ``None`` if the processing was
-            successful
         """
         pass
 
@@ -274,30 +378,57 @@ class AsyncApp:
                 f"Unexpected exception caught from background task {func.__name__}"
             )
 
-    @property
-    def configurator(self) -> AppConfigurator:
-        """The configurator object of the application that was responsible for
-        loading the configuration from various sources. Must be called only after
-        the app was prepared with `prepare()`.
 
-        Raises:
-            RuntimeError: when called before the app was prepared
+class SyncApp(BaseApp):
+    """Base class for apps with a main synchronous function.
+
+    Basically almost all of our apps except the most simple ones are based
+    either on this base class or on AsyncApp_.
+    """
+
+    @final
+    def run(self) -> None:
+        """Runs the application.
+
+        Do not override this method; override the `prepare(), `ready()`,
+        `run_main()` and `teardown()` hooks instead.
         """
-        if self._configurator is None:
-            raise RuntimeError("Application was not prepared yet")
-        return self._configurator
 
-    @property
-    def version(self) -> str:
-        """Returns the version number of the application.
+        if not self._prepared:
+            self.prepare()
 
-        The version number is imported from the `.version` module of the
-        application package. Returns `0.0.0` if there is no such module.
+        try:
+            self.ready()
+            self.run_main()
+        except ApplicationExit as ex:
+            self.log.error(str(ex) or "Received request to stop application.")
+
+        finally:
+            self.teardown()
+
+    def run_main(self) -> None:
+        """The main task of the application. You should override this in
+        subclasses.
+
+        The default implementation of this function does nothing; you can safely
+        override it in derived classes without calling the superclass
+        implementation.
         """
-        if self._version is None:
-            try:
-                version_module = import_module(".version", self._package_name)
-            except ImportError:
-                version_module = None
-            self._version = str(getattr(version_module, "__version__", "0.0.0"))
-        return self._version
+        pass
+
+    def ready(self) -> None:
+        """Called when the application is ready and is about to start the main
+        task.
+
+        Make sure to call the superclass implementation if you override this
+        method.
+        """
+        pass
+
+    def teardown(self) -> None:
+        """Called when the application is about to shut down.
+
+        Make sure to call the superclass implementation if you override this
+        method.
+        """
+        pass
