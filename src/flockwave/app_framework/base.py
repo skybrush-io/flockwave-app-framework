@@ -317,13 +317,28 @@ class AsyncApp(BaseApp):
             if exit_code:
                 return exit_code
 
+        exit_code_holder: List[int] = [0]
+
         # Helper function to ignore KeyboardInterrupt exceptions even if
         # they are wrapped in an exception group
         def ignore_keyboard_interrupt(exc) -> None:
             pass
 
+        # Helper function to handle application exit requests
+        def handle_application_exit_request(exc_group) -> None:
+            for exc in exc_group.exceptions:
+                # We process the first ApplicationExit request only
+                self.log.error(str(exc) or "Received request to stop application.")
+                exit_code_holder[0] = exc.exit_code
+                break
+
         try:
-            with catch({KeyboardInterrupt: ignore_keyboard_interrupt}):
+            with catch(
+                {
+                    KeyboardInterrupt: ignore_keyboard_interrupt,
+                    ApplicationExit: handle_application_exit_request,
+                }
+            ):
                 async with open_nursery() as nursery:
                     self._nursery = nursery
 
@@ -337,11 +352,7 @@ class AsyncApp(BaseApp):
 
                     await self.ready()
 
-            return 0
-
-        except ApplicationExit as ex:
-            self.log.error(str(ex) or "Received request to stop application.")
-            return ex.exit_code
+            return exit_code_holder[0]
 
         finally:
             self._nursery = None
