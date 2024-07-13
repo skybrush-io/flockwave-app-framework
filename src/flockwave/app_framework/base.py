@@ -133,6 +133,7 @@ class BaseApp:
             environment_variable=(self._app_name.upper() + "_SETTINGS"),
             default_filename=(
                 self._app_name + ".cfg",
+                self._app_name + ".toml",
                 self._app_name + ".jsonc",
                 self._app_name + ".json",
             ),

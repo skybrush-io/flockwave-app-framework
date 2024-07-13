@@ -1227,4 +1227,4 @@ daemon = ["flockwave-conn", "flockwave-ext"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "5a6b54fc14f8b6178a776ca29abe0739bf5dffcb7123a4221232d8ceeef88e6b"
+content-hash = "b7fc5939607d0460e859f830d1d6e7d24eff69aa6249590bdc89ca7db87e856f"

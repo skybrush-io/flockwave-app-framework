@@ -17,6 +17,12 @@ from re import sub
 from types import ModuleType
 from typing import Any, Callable, Dict, IO, Iterable, List, Optional, Tuple, Union
 
+try:
+    from tomllib import load as load_toml
+except ImportError:
+    from tomli import load as load_toml
+
+
 __alL__ = ("AppConfigurator", "Configuration")
 
 Configuration = Dict[str, Any]
@@ -88,6 +94,7 @@ class ConfigurationFormat(Enum):
     JSONC = "jsonc"
     JSON5 = "json5"
     PYTHON = "python"
+    TOML = "toml"
 
 
 @dataclass(frozen=True)
@@ -374,6 +381,9 @@ class AppConfigurator:
                 elif filename.endswith(".json5"):
                     config = load_json5(config_file)
                     cfg_format = ConfigurationFormat.JSON5
+                elif filename.endswith(".toml"):
+                    config = load_toml(config_file)
+                    cfg_format = ConfigurationFormat.TOML
                 elif not self._safe:
                     exec(compile(config_file.read(), filename, "exec"), config)
                     self._remove_python_builtins_from_config(config)
