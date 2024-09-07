@@ -13,7 +13,7 @@ def _ignore_irrelevant_unraisable_exceptions(
     log_unraisable: Callable[[sys.UnraisableHookArgs], None],
     args: sys.UnraisableHookArgs,
 ) -> None:
-    if args.exc_type == AttributeError and args.exc_value is not None:
+    if args.exc_type is AttributeError and args.exc_value is not None:
         # AttributeError: 'NoneType' object has no attribute '_alive',
         # probably from a WeakMethod
         exc_args = args.exc_value.args
