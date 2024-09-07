@@ -36,6 +36,9 @@ class BaseApp:
     _prepared: bool = False
     _version: Optional[str]
 
+    _shutting_down: bool
+    """Stores whether the application is currently being shut down."""
+
     def __init__(
         self,
         name: str,
@@ -152,6 +155,11 @@ class BaseApp:
         self._prepared = True
 
         return result
+
+    @property
+    def shutting_down(self) -> bool:
+        """Returns whether the application is currently shutting down."""
+        return self._shutting_down
 
     def _create_components(self) -> None:
         """Creates the components of the application.
@@ -357,6 +365,7 @@ class AsyncApp(BaseApp):
 
         finally:
             self._nursery = None
+            self._shutting_down = True
             await self.teardown()
 
     async def ready(self) -> None:
@@ -430,6 +439,7 @@ class SyncApp(BaseApp):
             return 0
 
         finally:
+            self._shutting_down = True
             self.teardown()
 
     def run_main(self) -> None:
