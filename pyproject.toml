@@ -56,5 +56,5 @@ lint.ignore = ["B905", "C901", "E402", "E501"]
 lint.select = ["B", "C", "E", "F", "W"]
 
 [build-system]
-requires = ["poetry>=0.12"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

@@ -308,13 +308,13 @@ reference = "fury"
 
 [[package]]
 name = "flockwave-conn"
-version = "8.0.0"
+version = "8.1.0"
 description = "Connection objects for various data sources"
 optional = true
 python-versions = ">=3.9,<4.0"
 files = [
-    {file = "flockwave-conn-8.0.0.tar.gz", hash = "sha256:640517347fcaafc313fd69f9d68876e18c406ecc7d5450dab0d113eb1887b651"},
-    {file = "flockwave_conn-8.0.0-py3-none-any.whl", hash = "sha256:0c117a6c574e5a47daf1bf8e908e6070404bc9a91ac5e7ffe1e5656702eb0579"},
+    {file = "flockwave-conn-8.1.0.tar.gz", hash = "sha256:91375110f8ab7beee390df1d867dc4ee6188fa86c84c4e84d4b6472dc5bff16a"},
+    {file = "flockwave_conn-8.1.0-py3-none-any.whl", hash = "sha256:abc844d22ef465930f586681f1fc13ef46ded153c96fd53bd9bedd1edc97f698"},
 ]
 
 [package.dependencies]
