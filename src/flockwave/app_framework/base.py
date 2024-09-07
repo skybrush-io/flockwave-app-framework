@@ -36,7 +36,7 @@ class BaseApp:
     _prepared: bool = False
     _version: Optional[str]
 
-    _shutting_down: bool
+    _shutting_down: bool = False
     """Stores whether the application is currently being shut down."""
 
     def __init__(
