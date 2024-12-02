@@ -271,12 +271,16 @@ class AsyncApp(BaseApp):
                 may also contain spaces. Falls back to the short app name if
                 not specified.
         """
-        super().__init__(name, package_name, full_name=full_name, log=log)
-
         # Placeholder for a nursery that parents all tasks in the app.
-        # This will be set to a real nursery when the app starts.
+        # This will be set to a real nursery when the app starts. Note that
+        # these have to be initialized here before super().__init__() is called
+        # because super().__init__() might call create_basic_components(), which
+        # might in turn call self.run_in_background() that needs the nursery
+        # and the pending tasks array
         self._nursery = None
         self._pending_tasks = []
+
+        super().__init__(name, package_name, full_name=full_name, log=log)
 
     def request_shutdown(self) -> None:
         """Requests tha application to shut down in a clean way.
