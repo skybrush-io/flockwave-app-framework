@@ -76,7 +76,7 @@ def _prune_dict(first, second) -> None:
         del first[key]
 
 
-def load_json5_with_hask_mark_styled_comments(
+def load_json5_with_hash_mark_styled_comments(
     input: IO[bytes], *, encoding: str = "utf-8"
 ) -> Any:
     """Helper function to load JSON5 files while dealing with the hashmark-style
@@ -376,7 +376,7 @@ class AppConfigurator:
                     config = load_json(config_file)
                     cfg_format = ConfigurationFormat.JSON
                 elif filename.endswith(".cjson") or filename.endswith(".jsonc"):
-                    config = load_json5_with_hask_mark_styled_comments(config_file)
+                    config = load_json5_with_hash_mark_styled_comments(config_file)
                     cfg_format = ConfigurationFormat.JSONC
                 elif filename.endswith(".json5"):
                     config = load_json5(config_file)
