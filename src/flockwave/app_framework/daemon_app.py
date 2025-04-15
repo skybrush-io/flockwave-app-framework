@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import partial
 from logging import Logger
 from trio import Nursery
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Awaitable, Callable, Optional, Union, TYPE_CHECKING, TypeVar
 
 from .base import AsyncApp
 from .errors import ApplicationExit
@@ -11,13 +11,16 @@ from .sd_notify import Notifier
 
 if TYPE_CHECKING:
     from flockwave.connections import (
+        Connection,
         ConnectionSupervisor,
-        ConnectionTask,
         SupervisionPolicy,
     )
     from flockwave.ext.manager import ExtensionAPIProxy, ExtensionManager
 
 __all__ = ("DaemonApp",)
+
+
+C = TypeVar("C", bound="Connection")
 
 
 class DaemonApp(AsyncApp):
@@ -136,9 +139,9 @@ class DaemonApp(AsyncApp):
 
     async def supervise(
         self,
-        connection,
+        connection: C,
         *,
-        task: Optional["ConnectionTask"] = None,
+        task: Optional[Callable[[C], Awaitable[None]]] = None,
         policy: Optional["SupervisionPolicy"] = None,
     ) -> None:
         """Shorthand to `self.connection_supervisor.supervise()`. See the
