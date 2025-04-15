@@ -20,7 +20,7 @@ from typing import Any, Callable, Dict, IO, Iterable, List, Optional, Tuple, Uni
 try:
     from tomllib import load as load_toml
 except ImportError:
-    from tomli import load as load_toml
+    from tomli import load as load_toml  # type: ignore
 
 
 __alL__ = ("AppConfigurator", "Configuration")
@@ -268,7 +268,7 @@ class AppConfigurator:
         if not value:
             self._merge_keys = _always_false
         elif callable(value):
-            self._merge_keys = value
+            self._merge_keys = value  # type: ignore
         else:
             self._merge_keys = set(value).__contains__
 
