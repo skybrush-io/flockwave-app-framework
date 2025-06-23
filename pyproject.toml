@@ -1,6 +1,6 @@
 [project]
 name = "flockwave-app-framework"
-version = "3.2.3"
+version = "3.3.0"
 description = "Generic app framework for CLI based apps in the Skybrush suite"
 authors = [{ name = "Tamas Nepusz", email = "tamas@collmot.com>" }]
 license = "MIT"
