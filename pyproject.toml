@@ -14,7 +14,7 @@ dependencies = [
 
 [project.optional-dependencies]
 asgi = ["uvicorn[standard] (>=0.34.3)"]
-daemon = ["flockwave-conn (>=9.0.0)", "flockwave-ext>=1.27.0"]
+daemon = ["flockwave-conn (>=9.2.0)", "flockwave-ext>=1.27.0"]
 console = ["urwid-uikit>=2.1.1"]
 
 [tool.poetry]

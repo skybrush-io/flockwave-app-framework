@@ -143,6 +143,7 @@ class DaemonApp(AsyncApp):
         *,
         task: Optional[Callable[[C], Awaitable[None]]] = None,
         policy: Optional["SupervisionPolicy"] = None,
+        name: Optional[str] = None,
     ) -> None:
         """Shorthand to `self.connection_supervisor.supervise()`. See the
         details there.
@@ -152,7 +153,9 @@ class DaemonApp(AsyncApp):
                 "You need to install flockwave-conn to use the connection supervisor"
             )
 
-        await self.connection_supervisor.supervise(connection, task=task, policy=policy)
+        await self.connection_supervisor.supervise(
+            connection, task=task, policy=policy, name=name
+        )
 
     async def ready(self) -> None:
         await super().ready()
