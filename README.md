@@ -1,12 +1,10 @@
-flockwave-app-framework
-=======================
+# flockwave-app-framework
 
 Generic app framework for CLI based apps in the Skybrush suite
 
-License
--------
+## License
 
-Copyright 2020-2022 CollMot Robotics Ltd.
+Copyright 2020-2025 CollMot Robotics Ltd.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in

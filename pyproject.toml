@@ -17,32 +17,27 @@ asgi = ["uvicorn[standard] (>=0.34.3)"]
 daemon = ["flockwave-conn (>=9.2.0)", "flockwave-ext>=1.27.0"]
 console = ["urwid-uikit>=2.1.1"]
 
-[tool.poetry]
-packages = [{ include = "flockwave", from = "src" }]
+[dependency-groups]
+dev = [
+  "pytest>=8.4.1",
+  "coverage[toml]>=7.9.1",
+  "pytest-cov>=6.2.1",
+  "flockwave-app-framework[asgi, daemon, console]",
+]
 
-[[tool.poetry.source]]
-name = "PyPI"
-priority = "primary"
+[tool.uv.build-backend]
+module-name = "flockwave"
+namespace = true
 
-[[tool.poetry.source]]
-name = "collmot"
-url = "https://pypi.collmot.com/simple/"
-priority = "explicit"
-
-[[tool.poetry.source]]
+[[tool.uv.index]]
 name = "fury"
 url = "https://pypi.fury.io/skybrush/"
-priority = "supplemental"
+publish-url = "https://pypi.fury.io/skybrush/"
 
-[tool.poetry.dependencies]
-flockwave-conn = { source = "fury" }
-flockwave-ext = { source = "fury" }
-urwid-uikit = { source = "fury" }
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.4.1"
-coverage = { extras = ["toml"], version = "^7.9.1" }
-pytest-cov = "^6.2.1"
+[tool.uv.sources]
+flockwave-conn = { index = "fury" }
+flockwave-ext = { index = "fury" }
+urwid-uikit = { index = "fury" }
 
 [tool.coverage.paths]
 source = ["src"]
@@ -59,5 +54,5 @@ lint.ignore = ["B905", "C901", "E402", "E501"]
 lint.select = ["B", "C", "E", "F", "W"]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv-build>=0.9"]
+build-backend = "uv_build"
