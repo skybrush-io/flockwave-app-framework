@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import partial
 from logging import Logger
 from trio import Nursery
-from typing import Awaitable, Callable, TYPE_CHECKING, TypeVar
+from typing import Any, Awaitable, Callable, TYPE_CHECKING, Type, TypeVar, overload
 
 from .base import AsyncApp
 from .errors import ApplicationExit
@@ -21,6 +21,7 @@ __all__ = ("DaemonApp",)
 
 
 C = TypeVar("C", bound="Connection")
+T = TypeVar("T")
 
 
 class DaemonApp(AsyncApp):
@@ -107,7 +108,13 @@ class DaemonApp(AsyncApp):
         if self.connection_supervisor:
             nursery.start_soon(self.connection_supervisor.run)
 
-    def import_api(self, extension_name: str) -> "ExtensionAPIProxy":
+    @overload
+    def import_api(self, extension_name: str) -> ExtensionAPIProxy: ...
+
+    @overload
+    def import_api(self, extension_name: str, expected_type: Type[T]) -> T: ...
+
+    def import_api(self, extension_name: str, expected_type=None) -> Any:
         """Imports the API exposed by an extension.
 
         Extensions *may* have a dictionary named ``exports`` that allows the
@@ -126,6 +133,8 @@ class DaemonApp(AsyncApp):
         Parameters:
             extension_name: the name of the extension whose API is to
                 be imported
+            expected_type: expected type of the returned API object, for
+                type checking purposes. No run-time validation is performed.
 
         Returns:
             a proxy object to the API of the extension that forwards attribute
