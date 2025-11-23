@@ -5,7 +5,7 @@ from functools import partial
 from importlib import import_module
 from logging import getLogger, Logger
 from trio import CancelScope, Nursery, open_nursery
-from typing import Awaitable, Callable, List, Optional, Union, final
+from typing import Awaitable, Callable, final
 
 from .configurator import AppConfigurator, Configuration
 from .errors import ApplicationExit
@@ -30,11 +30,11 @@ class BaseApp:
     """The logger of the application"""
 
     _app_name: str
-    _app_full_name: Optional[str]
-    _configurator: Optional[AppConfigurator]
+    _app_full_name: str | None
+    _configurator: AppConfigurator | None
     _package_name: str
     _prepared: bool = False
-    _version: Optional[str]
+    _version: str | None
 
     _shutting_down: bool = False
     """Stores whether the application is currently being shut down."""
@@ -44,8 +44,8 @@ class BaseApp:
         name: str,
         package_name: str,
         *,
-        full_name: Optional[str] = None,
-        log: Optional[Union[str, Logger]] = None,
+        full_name: str | None = None,
+        log: str | Logger | None = None,
     ):
         """Constructor.
 
@@ -117,9 +117,7 @@ class BaseApp:
         """
         pass
 
-    def prepare(
-        self, config: Optional[str] = None, debug: bool = False
-    ) -> Optional[int]:
+    def prepare(self, config: str | None = None, debug: bool = False) -> int | None:
         """Hook function that contains preparation steps that should be
         performed by the app before it starts running.
 
@@ -177,7 +175,7 @@ class BaseApp:
         """
         pass
 
-    def _process_configuration(self, config: Configuration) -> Optional[int]:
+    def _process_configuration(self, config: Configuration) -> int | None:
         """Processes the configuration of the application after it was
         configured.
 
@@ -242,16 +240,16 @@ class AsyncApp(BaseApp):
     either on this base class or on SyncApp_.
     """
 
-    _nursery: Optional[Nursery]
-    _pending_tasks: List[Callable[[], Awaitable[None]]]
+    _nursery: Nursery | None
+    _pending_tasks: list[Callable[[], Awaitable[None]]]
 
     def __init__(
         self,
         name: str,
         package_name: str,
         *,
-        full_name: Optional[str] = None,
-        log: Optional[Union[str, Logger]] = None,
+        full_name: str | None = None,
+        log: str | Logger | None = None,
     ):
         """Constructor.
 
@@ -292,7 +290,7 @@ class AsyncApp(BaseApp):
 
     def run_in_background(
         self, func, *args, cancellable: bool = False, protected: bool = False
-    ) -> Optional[CancelScope]:
+    ) -> CancelScope | None:
         """Runs the given function as a background task in the application.
 
         Parameters:
@@ -330,7 +328,7 @@ class AsyncApp(BaseApp):
             if exit_code:
                 return exit_code
 
-        exit_code_holder: List[int] = [0]
+        exit_code_holder: list[int] = [0]
 
         # Helper function to ignore KeyboardInterrupt exceptions even if
         # they are wrapped in an exception group

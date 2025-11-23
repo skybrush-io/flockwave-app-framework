@@ -1,16 +1,18 @@
-from typing import List, Optional, Sequence, Tuple, TYPE_CHECKING
+from __future__ import annotations
+
+from typing import Sequence, TYPE_CHECKING
 
 from .base import AsyncApp
 
 if TYPE_CHECKING:
     from urwid import MainLoop, Widget
-    from urwid.main_loop import EventLoop
+    from urwid.event_loop import EventLoop
     from urwid_uikit.menus import MenuOverlay, MenuItemSpecification
 
 
 __all__ = ("Palette", "TerminalApp")
 
-Palette = List[Tuple[str, str, str]]
+Palette = list[tuple[str, str, str]]
 """Typing specification for urwid color palettes"""
 
 
@@ -22,17 +24,10 @@ class TerminalApp(AsyncApp):
         debug: whether the app is in debug mode
     """
 
-    _menu_overlay: Optional["MenuOverlay"]
-    _root_widget: Optional["Widget"]
-    _ui_event_loop: Optional["EventLoop"]
-    _ui_main_loop: Optional["MainLoop"]
-
-    def __init__(self, *args, **kwds):
-        self._menu_overlay = None
-        self._root_widget = None
-        self._ui_main_loop = None
-        self._ui_event_loop = None
-        super().__init__(*args, **kwds)
+    _menu_overlay: MenuOverlay | None = None
+    _root_widget: Widget | None = None
+    _ui_event_loop: EventLoop | None = None
+    _ui_main_loop: MainLoop | None = None
 
     def _create_basic_components(self) -> None:
         """Creates the most basic components of the application.
@@ -178,7 +173,7 @@ class TerminalApp(AsyncApp):
         elif input == "esc":
             self.invoke_menu() or self.quit()
 
-    def on_menu_invoked(self) -> Optional[Sequence["MenuItemSpecification"]]:
+    def on_menu_invoked(self) -> Sequence[MenuItemSpecification] | None:
         """Method that must be overridden if the terminal app wishes to provide
         a menu that is triggered with the `invoke_menu()` function.
 
@@ -189,7 +184,7 @@ class TerminalApp(AsyncApp):
         pass
 
     @property
-    def root_widget(self) -> Optional["Widget"]:
+    def root_widget(self) -> Widget | None:
         """Returns the top-level widget of the app."""
         return self._root_widget
 

@@ -2,10 +2,12 @@
 Linux from daemon apps.
 """
 
+from __future__ import annotations
+
 import os
 
 from pathlib import Path
-from typing import Awaitable, Callable, IO, Optional, Union
+from typing import Awaitable, Callable, IO
 
 from trio import wrap_file
 from trio.socket import socket, SOCK_DGRAM
@@ -18,7 +20,7 @@ Writer = Callable[[bytes], Awaitable[None]]
 stream.
 """
 
-_instance: Optional["Notifier"] = None
+_instance: Notifier | None = None
 """The default, global notifier instance."""
 
 
@@ -35,7 +37,7 @@ class Notifier:
     _writer: Writer
 
     @classmethod
-    def from_unix_domain_socket(cls, path: Union[Path, str]):
+    def from_unix_domain_socket(cls, path: Path | str):
         """Constructs a notifier instance that will talk to the given UNIX
         domain socket.
         """
@@ -123,5 +125,5 @@ class Notifier:
         """Resets the systemd watchdog of the service"""
         await self._send("WATCHDOG=1\n")
 
-    async def _send(self, msg: Union[str, bytes]):
+    async def _send(self, msg: str | bytes):
         await self._writer(msg.encode() if isinstance(msg, str) else msg)

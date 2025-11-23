@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import partial
 from logging import Logger
 from trio import Nursery
-from typing import Awaitable, Callable, Optional, Union, TYPE_CHECKING, TypeVar
+from typing import Awaitable, Callable, TYPE_CHECKING, TypeVar
 
 from .base import AsyncApp
 from .errors import ApplicationExit
@@ -38,7 +38,7 @@ class DaemonApp(AsyncApp):
             extension modules for the daemon
     """
 
-    connection_supervisor: Optional["ConnectionSupervisor"]
+    connection_supervisor: ConnectionSupervisor | None
     extension_manager: "ExtensionManager"
 
     def __init__(
@@ -46,8 +46,8 @@ class DaemonApp(AsyncApp):
         name: str,
         package_name: str,
         *,
-        full_name: Optional[str] = None,
-        log: Optional[Union[str, Logger]] = None,
+        full_name: str | None = None,
+        log: str | Logger | None = None,
     ):
         """Constructor.
 
@@ -141,9 +141,9 @@ class DaemonApp(AsyncApp):
         self,
         connection: C,
         *,
-        task: Optional[Callable[[C], Awaitable[None]]] = None,
-        policy: Optional["SupervisionPolicy"] = None,
-        name: Optional[str] = None,
+        task: Callable[[C], Awaitable[None]] | None = None,
+        policy: SupervisionPolicy | None = None,
+        name: str | None = None,
     ) -> None:
         """Shorthand to `self.connection_supervisor.supervise()`. See the
         details there.

@@ -15,7 +15,7 @@ from json5 import load as load_json5, loads as load_json5_from_string
 from logging import Logger
 from re import sub
 from types import ModuleType
-from typing import Any, Callable, Dict, IO, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, IO, Iterable
 
 try:
     from tomllib import load as load_toml
@@ -25,7 +25,7 @@ except ImportError:
 
 __alL__ = ("AppConfigurator", "Configuration")
 
-Configuration = Dict[str, Any]
+Configuration = dict[str, Any]
 """Type specification for configuration objects"""
 
 
@@ -60,7 +60,7 @@ def _prune_dict(first, second) -> None:
     After pruning, merging the pruned dictionary into `second` should yield a
     dictionary that is identical to `first`.
     """
-    to_delete: List[str] = []
+    to_delete: list[str] = []
 
     for key, value in first.items():
         if key in second:
@@ -122,23 +122,23 @@ class AppConfigurator:
     """
 
     _config: Configuration
-    _default_filenames: Tuple[str, ...]
-    _environment_variable: Optional[str]
+    _default_filenames: tuple[str, ...]
+    _environment_variable: str | None
     _key_filter: Callable[[str], bool]
-    _loaded_files: List[LoadedConfigurationFile]
+    _loaded_files: list[LoadedConfigurationFile]
     _merge_keys: Callable[[str], bool]
-    _log: Optional[Logger]
-    _package_name: Optional[str]
+    _log: Logger | None
+    _package_name: str | None
     _safe: bool
 
     def __init__(
         self,
-        config: Optional[Configuration] = None,
+        config: Configuration | None = None,
         *,
-        default_filename: Optional[Union[str, Iterable[str]]] = None,
-        environment_variable: Optional[str] = None,
-        log: Optional[Logger] = None,
-        package_name: Optional[str] = None,
+        default_filename: str | Iterable[str] | None = None,
+        environment_variable: str | None = None,
+        log: Logger | None = None,
+        package_name: str | None = None,
         safe: bool = False,
     ):
         """Constructor.
@@ -176,7 +176,7 @@ class AppConfigurator:
         self._package_name = package_name
         self._safe = bool(safe)
 
-    def configure(self, filename: Optional[str] = None) -> bool:
+    def configure(self, filename: str | None = None) -> bool:
         """Configures the application.
 
         Parameters:
@@ -245,7 +245,7 @@ class AppConfigurator:
         self._key_filter = value or _always_true
 
     @property
-    def loaded_files(self) -> List[LoadedConfigurationFile]:
+    def loaded_files(self) -> list[LoadedConfigurationFile]:
         """Returns the list of loaded configuration files."""
         return self._loaded_files
 
@@ -303,7 +303,7 @@ class AppConfigurator:
         if module:
             self._load_configuration_from_module(module, deep_copy=True)
 
-    def _load_configuration(self, config: Optional[str] = None) -> bool:
+    def _load_configuration(self, config: str | None = None) -> bool:
         """Loads the configuration of the application from the following
         sources, in the following order:
 
@@ -369,7 +369,7 @@ class AppConfigurator:
         config = {}
 
         exists = True
-        cfg_format: Optional[ConfigurationFormat] = None
+        cfg_format: ConfigurationFormat | None = None
         try:
             with open(filename, mode="rb") as config_file:
                 if filename.endswith(".json"):
@@ -423,7 +423,7 @@ class AppConfigurator:
 
         return True
 
-    def _load_configuration_from_dict(self, config: Dict[str, Any]) -> None:
+    def _load_configuration_from_dict(self, config: dict[str, Any]) -> None:
         """Loads configuration settings from the given Python dictionary.
 
         Parameters:

@@ -3,7 +3,7 @@ from __future__ import annotations
 import platform
 import sys
 
-from typing import ClassVar, Optional, TYPE_CHECKING
+from typing import ClassVar, TYPE_CHECKING
 
 from .base import SyncApp
 
@@ -27,7 +27,7 @@ class ASGIWebServerApp(SyncApp):
     want to force the app to listen on localhost only.
     """
 
-    _args: Optional[Namespace] = None
+    _args: Namespace | None = None
     """The parsed and post-processed command line arguments of the app;
     ``None`` if they have not been parsed yet.
     """
@@ -92,7 +92,7 @@ class ASGIWebServerApp(SyncApp):
 
         return super().prepare(config, debug)
 
-    def _process_arguments(self, args: Namespace) -> Optional[int]:
+    def _process_arguments(self, args: Namespace) -> int | None:
         """Post-processes the command line arguments parsed by the argument
         parser.
 
