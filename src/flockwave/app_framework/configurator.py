@@ -4,18 +4,19 @@ sources.
 
 import errno
 import os
-
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
 from importlib import import_module
 from inspect import ismodule
 from json import load as load_json
-from json5 import load as load_json5, loads as load_json5_from_string
 from logging import Logger
 from re import sub
 from types import ModuleType
-from typing import Any, Callable, IO, Iterable
+from typing import IO, Any, Callable, Iterable
+
+from json5 import load as load_json5
+from json5 import loads as load_json5_from_string
 
 try:
     from tomllib import load as load_toml
@@ -52,7 +53,7 @@ def _merge_dicts(source, into) -> None:
             into[key] = value
 
 
-def _prune_dict(first, second) -> None:
+def _prune_dict(first: dict, second: dict) -> None:
     """Compares two dictionaries recursively and removes those items from the
     first one that are identical to the items with the same key from the second
     dictionary.
@@ -83,7 +84,7 @@ def load_json5_with_hash_mark_styled_comments(
     comments that were commonly found in earlier versions of our configuration
     files.
     """
-    lines = [sub(rb"^\s*#.*", b"", line) for line in input]  # type: ignore
+    lines = [sub(rb"^\s*#.*", b"", line) for line in input]
     return load_json5_from_string(b"".join(lines).decode(encoding))
 
 
@@ -268,7 +269,7 @@ class AppConfigurator:
         if not value:
             self._merge_keys = _always_false
         elif callable(value):
-            self._merge_keys = value  # type: ignore
+            self._merge_keys = value
         else:
             self._merge_keys = set(value).__contains__
 
@@ -400,7 +401,7 @@ class AppConfigurator:
                 if mandatory:
                     self._log.error(message)
                 else:
-                    self._log.warn(message)
+                    self._log.warning(message)
             return False
 
         snapshot = deepcopy(self._config)

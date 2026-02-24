@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from functools import partial
 from logging import Logger
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Type, TypeVar, overload
+
 from trio import Nursery
-from typing import Any, Awaitable, Callable, TYPE_CHECKING, Type, TypeVar, overload
 
 from .base import AsyncApp
 from .errors import ApplicationExit
@@ -75,14 +76,16 @@ class DaemonApp(AsyncApp):
     def _create_basic_components(self) -> None:
         try:
             from flockwave.connections import ConnectionSupervisor
+
+            create_connection_supervisor = ConnectionSupervisor
         except ImportError:
-            ConnectionSupervisor = None
+            create_connection_supervisor = None
 
         from flockwave.ext.manager import ExtensionManager
 
         self.extension_manager = ExtensionManager(self._package_name + ".ext")
-        if ConnectionSupervisor:
-            self.connection_supervisor = ConnectionSupervisor()
+        if create_connection_supervisor:
+            self.connection_supervisor = create_connection_supervisor()
 
     async def _on_nursery_created(self, nursery: Nursery) -> None:
         from flockwave.ext.errors import ApplicationExit as ExitRequestedFromExtension
@@ -94,7 +97,7 @@ class DaemonApp(AsyncApp):
                     configuration=self.config.get("EXTENSIONS", {}),
                     app=self,
                 )
-            )  # type: ignore
+            )
         except ExitRequestedFromExtension as ex:
             raise ApplicationExit(
                 str(ex) or "Application exit requested from extension"

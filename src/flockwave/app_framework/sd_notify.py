@@ -5,12 +5,11 @@ Linux from daemon apps.
 from __future__ import annotations
 
 import os
-
 from pathlib import Path
-from typing import Awaitable, Callable, IO
+from typing import IO, Awaitable, Callable
 
 from trio import wrap_file
-from trio.socket import socket, SOCK_DGRAM
+from trio.socket import SOCK_DGRAM, socket
 
 __all__ = ("Notifier",)
 
@@ -60,7 +59,7 @@ class Notifier:
     def for_binary_stream(cls, fp: IO[bytes]):
         """Constructs a notifier instance that writes to the given binary stream."""
         async_fp = wrap_file(fp)
-        return cls(async_fp.write)  # type: ignore
+        return cls(async_fp.write)
 
     @classmethod
     def for_text_stream(cls, fp: IO[str], *, encoding: str = "utf-8"):
